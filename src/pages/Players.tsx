@@ -9,6 +9,7 @@ import {
   TIMES_223,
   type Absence,
   type DayBlock,
+  type Location,
   type Player,
   type RecurringRule,
   type ScheduleType,
@@ -45,9 +46,21 @@ const anchorLabel: Record<ScheduleType, string> = {
 
 export function Players() {
   const g = useGroup();
-  const { state, upsertPlayer, removePlayer, code, setCode, currentPlayer, isAdmin, setRevealPins } = g;
+  const { state, upsertPlayer, removePlayer, code, setCode, currentPlayer, isAdmin, setRevealPins, removeLocation } = g;
   const [editing, setEditing] = useState<Player | null>(null);
   const [open, setOpen] = useState(false);
+  const [locOpen, setLocOpen] = useState(false);
+  const [editLoc, setEditLoc] = useState<Location | null>(null);
+
+  const otherBeheerders = (id: string) =>
+    Object.values(state.players).filter((x) => x.id !== id && x.active && x.role === "BEHEERDER").length;
+  const doDelete = (p: Player) => {
+    if (p.role === "BEHEERDER" && otherBeheerders(p.id) < 1) {
+      alert("Er moet altijd minstens één beheerder blijven.");
+      return;
+    }
+    removePlayer(p.id);
+  };
 
   const list = useMemo(
     () => Object.values(state.players).sort((a, b) => a.createdAt - b.createdAt),
@@ -84,7 +97,12 @@ export function Players() {
   const canEdit = (p: Player) => isAdmin || p.id === currentPlayer?.id;
 
   const onSave = async (p: Player) => {
-    const isNew = !state.players[p.id];
+    const existing = state.players[p.id];
+    if (existing?.role === "BEHEERDER" && p.role !== "BEHEERDER" && otherBeheerders(p.id) < 1) {
+      alert("Er moet altijd minstens één beheerder blijven.");
+      return;
+    }
+    const isNew = !existing;
     upsertPlayer(p);
     setOpen(false);
     if (isNew && protectedOn) {
@@ -105,7 +123,7 @@ export function Players() {
           canDelete={isAdmin}
           canResetPin={isAdmin && protectedOn}
           onEdit={() => { setEditing(p); setOpen(true); }}
-          onDelete={() => removePlayer(p.id)}
+          onDelete={() => doDelete(p)}
           onResetPin={() => resetPin(p)}
         />
       ))}
@@ -125,7 +143,7 @@ export function Players() {
           canDelete={isAdmin}
           canResetPin={isAdmin && protectedOn}
           onEdit={() => { setEditing(p); setOpen(true); }}
-          onDelete={() => removePlayer(p.id)}
+          onDelete={() => doDelete(p)}
           onResetPin={() => resetPin(p)}
         />
       ))}
@@ -152,6 +170,23 @@ export function Players() {
         </>
       )}
 
+      {isAdmin && (
+        <>
+          <div className="section-title">Locaties</div>
+          {Object.values(state.locations).map((l) => (
+            <div className={"person" + (l.active ? "" : " inactive")} key={l.id}>
+              <span className="av" style={{ background: "var(--accent)", width: 38, height: 38, fontSize: 16, borderWidth: 0, marginLeft: 0 }}>🎾</span>
+              <div className="meta"><b>{l.name}</b><small>{l.city}{l.active ? "" : " · inactief"}</small></div>
+              <div className="acts">
+                <button className="iconbtn" onClick={() => { setEditLoc(l); setLocOpen(true); }} aria-label="bewerk">✎</button>
+                <button className="iconbtn danger" onClick={() => { if (confirm(`"${l.name}" verwijderen?`)) removeLocation(l.id); }} aria-label="verwijder">🗑</button>
+              </div>
+            </div>
+          ))}
+          <button className="addbtn" onClick={() => { setEditLoc(null); setLocOpen(true); }}>＋ Locatie toevoegen</button>
+        </>
+      )}
+
       <div className="section-title">Groep</div>
       <div className="settings-line" style={{ borderTop: "none" }}>
         <span className="k">Groepscode</span>
@@ -172,7 +207,38 @@ export function Players() {
           onSave={onSave}
         />
       )}
+      {locOpen && (
+        <LocationForm
+          existing={editLoc}
+          onClose={() => setLocOpen(false)}
+          onSave={(l) => { g.upsertLocation(l); setLocOpen(false); }}
+        />
+      )}
     </>
+  );
+}
+
+function LocationForm({ existing, onClose, onSave }: { existing: Location | null; onClose: () => void; onSave: (l: Location) => void }) {
+  const [d, setD] = useState<Location>(
+    existing ?? { id: "loc" + Date.now().toString(36), name: "", address: "", postcode: "", city: "", indoor: true, active: true },
+  );
+  const p = (x: Partial<Location>) => setD((s) => ({ ...s, ...x }));
+  const save = () => { if (!d.name.trim()) return; onSave({ ...d, name: d.name.trim() }); };
+  return (
+    <div className="sheet-bg" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="sheet" role="dialog" aria-modal>
+        <div className="grab" />
+        <h2>{existing ? "Locatie bewerken" : "Locatie toevoegen"}</h2>
+        <div className="field"><label>Naam</label><input type="text" value={d.name} onChange={(e) => p({ name: e.target.value })} placeholder="bv. Peakz Padel Assen" /></div>
+        <div className="field"><label>Plaats</label><input type="text" value={d.city} onChange={(e) => p({ city: e.target.value })} /></div>
+        <div className="field"><label>Adres</label><input type="text" value={d.address} onChange={(e) => p({ address: e.target.value })} /></div>
+        <div className="field"><label>Postcode</label><input type="text" value={d.postcode} onChange={(e) => p({ postcode: e.target.value })} /></div>
+        <div className="field"><label>Boekingslink (optioneel)</label><input type="text" value={d.bookingUrl ?? ""} onChange={(e) => p({ bookingUrl: e.target.value || undefined })} placeholder="https://..." /></div>
+        <div className="switchrow"><input type="checkbox" id="indoor" checked={d.indoor} onChange={(e) => p({ indoor: e.target.checked })} /><label htmlFor="indoor">Indoor</label></div>
+        <div className="switchrow"><input type="checkbox" id="lactive" checked={d.active} onChange={(e) => p({ active: e.target.checked })} /><label htmlFor="lactive">Actief</label></div>
+        <div className="btnrow"><button className="btn primary" onClick={save}>{existing ? "Opslaan" : "Toevoegen"}</button><button className="btn ghost" onClick={onClose}>Annuleer</button></div>
+      </div>
+    </div>
   );
 }
 
@@ -191,6 +257,7 @@ function PersonRow({
         <b>{p.fullName}{me ? " (jij)" : ""}</b>
         <small>
           {TYPES.find((t) => t.key === p.scheduleType)?.label ?? p.scheduleType}
+          {p.role === "BEHEERDER" ? " · beheerder" : ""}
           {!p.active ? " · inactief" : ""}
         </small>
       </div>
@@ -383,6 +450,17 @@ function PlayerForm({
           <div className="switchrow">
             <input type="checkbox" id="reserve" checked={draft.reserve} onChange={(e) => patch({ reserve: e.target.checked })} />
             <label htmlFor="reserve">Reservespeler</label>
+          </div>
+        )}
+        {gg.isAdmin && (
+          <div className="switchrow">
+            <input
+              type="checkbox"
+              id="beheerder"
+              checked={draft.role === "BEHEERDER"}
+              onChange={(e) => patch({ role: e.target.checked ? "BEHEERDER" : "SPELER" })}
+            />
+            <label htmlFor="beheerder">Beheerder (mag alles beheren)</label>
           </div>
         )}
 

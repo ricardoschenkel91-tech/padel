@@ -13,7 +13,7 @@ import { todayStr } from "./core";
 type Tab = "kansen" | "gereserveerd" | "beschikbaar" | "rooster" | "spelers";
 
 export function App() {
-  const { state, sync, code, setCode, currentPlayer, logout, revealPins, setRevealPins } = useGroup();
+  const { state, sync, code, setCode, currentPlayer, isAdmin, logout, revealPins, setRevealPins } = useGroup();
   const [tab, setTab] = useState<Tab>("kansen");
 
   // Groepscode uit de deel-link (#g=code) overnemen bij openen.
@@ -46,25 +46,30 @@ export function App() {
           <div>
             <h1>PadelMatch</h1>
           </div>
-          {currentPlayer ? (
-            <button
-              className="profile"
-              onClick={() => {
-                if (confirm(`Uitloggen als ${currentPlayer.displayName}?`)) logout();
-              }}
-              title="Uitloggen"
-            >
-              <span className="av" style={{ background: currentPlayer.color }}>
-                {initials(currentPlayer.displayName)}
+          <div className="hdr-right">
+            {isAdmin && (
+              <button className="gearbtn" onClick={() => setTab("spelers")} title="Beheer" aria-label="Beheer">⚙️</button>
+            )}
+            {currentPlayer ? (
+              <button
+                className="profile"
+                onClick={() => {
+                  if (confirm(`Uitloggen als ${currentPlayer.displayName}?`)) logout();
+                }}
+                title="Uitloggen"
+              >
+                <span className="av" style={{ background: currentPlayer.color }}>
+                  {initials(currentPlayer.displayName)}
+                </span>
+                <span className="pname">{currentPlayer.displayName}</span>
+              </button>
+            ) : (
+              <span className={"sync " + (sync === "cloud" ? "cloud" : "")}>
+                <span className="dot" />
+                {sync === "cloud" ? "Live sync" : "Lokaal"}
               </span>
-              <span className="pname">{currentPlayer.displayName}</span>
-            </button>
-          ) : (
-            <span className={"sync " + (sync === "cloud" ? "cloud" : "")}>
-              <span className="dot" />
-              {sync === "cloud" ? "Live sync" : "Lokaal"}
-            </span>
-          )}
+            )}
+          </div>
         </div>
         <div className="tabs" role="tablist">
           <button role="tab" aria-selected={tab === "kansen"} onClick={() => setTab("kansen")}>

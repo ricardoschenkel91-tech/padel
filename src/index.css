@@ -298,3 +298,9 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .badge.conf{color:#fff;background:var(--purple)}
 .resline{display:flex;gap:10px;padding:3px 2px;font-size:13.5px;align-items:baseline}
 .resline .rk{width:44px;flex:0 0 auto;color:var(--ink-3);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em}
+
+/* header rechts + beheer-tandwiel */
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-right .sync,.hdr-right .profile{margin-left:0}
+.gearbtn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
+  color:var(--ink-2);font-size:16px;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:var(--shadow)}

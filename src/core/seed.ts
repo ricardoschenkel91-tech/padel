@@ -46,7 +46,7 @@ export function seedPlayers(): Player[] {
     player({ fullName: "Kay S", scheduleType: "dagdienst" }),
     player({ fullName: "Claudia TK", scheduleType: "dagdienst" }),
     player({ fullName: "Vincent K", scheduleType: "dagdienst" }),
-    player({ fullName: "Maurice T", scheduleType: "223", referenceDate: "2026-08-23", shiftTimes: TIMES_223 }),
+    player({ fullName: "Maurice T", scheduleType: "223", referenceDate: "2026-08-23", shiftTimes: TIMES_223, role: "BEHEERDER" }),
   ];
   const reserves: Player[] = Array.from({ length: 10 }, (_, i) =>
     player({

@@ -21,6 +21,7 @@ import {
   type CombinationRestriction,
   type GroupSettings,
   type GroupState,
+  type Location,
   type Player,
 } from "../core";
 import { cloudEnabled, saveGroup, subscribeGroup } from "./firebase";
@@ -48,6 +49,8 @@ interface GroupContextValue {
   removeRestriction: (id: string) => void;
   upsertBooking: (b: Booking) => void;
   removeBooking: (id: string) => void;
+  upsertLocation: (l: Location) => void;
+  removeLocation: (id: string) => void;
   login: (pin: string) => Promise<boolean>;
   logout: () => void;
   assignPin: (playerId: string) => Promise<string>;
@@ -264,6 +267,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           const bookings = { ...s.bookings };
           delete bookings[id];
           return { ...s, bookings };
+        }),
+      upsertLocation: (l) =>
+        update((s) => ({ ...s, locations: { ...s.locations, [l.id]: l } })),
+      removeLocation: (id) =>
+        update((s) => {
+          const locations = { ...s.locations };
+          delete locations[id];
+          return { ...s, locations };
         }),
       revealPins,
       setRevealPins,
