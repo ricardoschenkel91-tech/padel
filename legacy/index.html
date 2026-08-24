@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0FB3A6">
+<meta name="description" content="Zie in één oogopslag wanneer jullie vriendengroep samen kan padellen — voegt ieders ploegenrooster samen en vindt de gezamenlijke vrije momenten.">
+<title>PadelMatch — samen padellen plannen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%230FB3A6'/%3E%3Ccircle cx='34' cy='32' r='13' fill='%23b6e94a'/%3E%3C/svg%3E">
+</head>
+<body>
+<style>
+  :root{
+    /* padel court teal accent · lime ball highlight · deep blue-green ink */
+    --accent:#0FB3A6; --accent-ink:#08302d; --accent-soft:#d6f2ef;
+    --ball:#b6e94a; --ball-ink:#31410a; --ball-soft:#eef8cf;
+    --ink:#0d2a2d; --ink-2:#3c5b5d; --ink-3:#6f8a8b;
+    --bg:#eef3f2; --surface:#ffffff; --surface-2:#f5f8f7;
+    --line:#dde6e5; --line-2:#c9d6d4;
+    --shadow:0 1px 2px rgba(13,42,45,.05),0 8px 24px -12px rgba(13,42,45,.18);
+    /* dienst-kleuren */
+    --sh-O:#f2a63c; --sh-O-bg:#fdf0dd;
+    --sh-M:#3f7fe0; --sh-M-bg:#e3ecfb;
+    --sh-N:#7a6cf0; --sh-N-bg:#ebe8fc;
+    --sh-D:#12a98a; --sh-D-bg:#d9f1ea;
+    --sh-V:#8aa0a0; --sh-V-bg:#eef3f2;
+    --good:#12a98a; --warn:#e2892f; --bad:#d95757;
+    --r:16px; --r-sm:10px;
+    --font-display:"Archivo","Archivo Expanded",system-ui,sans-serif;
+    --font-body:"Instrument Sans",system-ui,-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --accent:#25c9bb; --accent-ink:#eafffb; --accent-soft:#123a37;
+      --ball:#c3f159; --ball-ink:#0e1a00; --ball-soft:#2a3411;
+      --ink:#e9f3f1; --ink-2:#a7c1bf; --ink-3:#7e9997;
+      --bg:#0a1719; --surface:#102528; --surface-2:#0d2023;
+      --line:#20393c; --line-2:#2b494c;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+      --sh-O:#f2ad4f; --sh-O-bg:#33270f;
+      --sh-M:#5f95ec; --sh-M-bg:#152741;
+      --sh-N:#9385f5; --sh-N-bg:#221e40;
+      --sh-D:#28c0a1; --sh-D-bg:#0f322b;
+      --sh-V:#7e9695; --sh-V-bg:#16292b;
+    }
+  }
+  :root[data-theme="dark"]{
+    --accent:#25c9bb; --accent-ink:#eafffb; --accent-soft:#123a37;
+    --ball:#c3f159; --ball-ink:#0e1a00; --ball-soft:#2a3411;
+    --ink:#e9f3f1; --ink-2:#a7c1bf; --ink-3:#7e9997;
+    --bg:#0a1719; --surface:#102528; --surface-2:#0d2023;
+    --line:#20393c; --line-2:#2b494c;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px -14px rgba(0,0,0,.6);
+    --sh-O:#f2ad4f; --sh-O-bg:#33270f;
+    --sh-M:#5f95ec; --sh-M-bg:#152741;
+    --sh-N:#9385f5; --sh-N-bg:#221e40;
+    --sh-D:#28c0a1; --sh-D-bg:#0f322b;
+    --sh-V:#7e9695; --sh-V-bg:#16292b;
+  }
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden}
+  .wrap{max-width:640px;margin:0 auto;min-height:100vh;background:var(--bg)}
+  h1,h2,h3{font-family:var(--font-display);font-weight:700;letter-spacing:-.02em;
+    text-wrap:balance;margin:0}
+  .mono-num{font-variant-numeric:tabular-nums}
+  button{font-family:inherit;cursor:pointer}
+  :focus-visible{outline:2.5px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+  /* ---------- header ---------- */
+  header{position:sticky;top:0;z-index:30;background:var(--bg);
+    padding:14px 16px 0;border-bottom:1px solid transparent}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .logo{width:34px;height:34px;border-radius:10px;flex:0 0 auto;
+    background:radial-gradient(circle at 32% 30%,var(--ball) 0 26%,transparent 27%),
+      linear-gradient(135deg,var(--accent),var(--accent) 60%,#0a8f85);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+  .brand h1{font-size:20px;line-height:1}
+  .brand .tag{font-size:11.5px;color:var(--ink-3);font-weight:500;letter-spacing:.01em}
+  .sync{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:11px;
+    color:var(--ink-3);background:var(--surface);border:1px solid var(--line);
+    padding:5px 9px;border-radius:20px;font-weight:600;white-space:nowrap}
+  .sync .dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3)}
+  .sync.cloud .dot{background:var(--good);box-shadow:0 0 0 3px color-mix(in srgb,var(--good) 22%,transparent)}
+  .sync.local .dot{background:var(--warn)}
+
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:2px;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:12px;padding:3px;margin-bottom:14px}
+  .tabs button{flex:1;border:0;background:transparent;color:var(--ink-2);
+    font-weight:650;font-size:13.5px;padding:9px 4px;border-radius:9px;
+    display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s}
+  .tabs button .n{font-size:11px;background:var(--line);color:var(--ink-2);
+    min-width:17px;height:17px;border-radius:9px;display:inline-flex;align-items:center;
+    justify-content:center;padding:0 4px;font-weight:700}
+  .tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);
+    box-shadow:var(--shadow)}
+  .tabs button[aria-selected="true"] .n{background:var(--accent);color:#fff}
+
+  main{padding:4px 16px 120px}
+  .view{display:none}.view.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+  /* ---------- controls ---------- */
+  .ctrls{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 16px}
+  .chip{display:inline-flex;align-items:center;gap:7px;background:var(--surface);
+    border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-size:12.5px;
+    font-weight:600;color:var(--ink-2);box-shadow:var(--shadow)}
+  .chip label{color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  .chip .step{display:flex;align-items:center;gap:2px}
+  .chip .step button{width:22px;height:22px;border-radius:7px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink);font-size:15px;line-height:1;font-weight:700;
+    display:flex;align-items:center;justify-content:center;padding:0}
+  .chip .step b{min-width:20px;text-align:center;color:var(--ink);font-size:14px;font-weight:800}
+  select,input[type=date],input[type=text]{font-family:inherit;font-size:14px;color:var(--ink);
+    background:var(--surface);border:1px solid var(--line-2);border-radius:10px;
+    padding:9px 11px;width:100%}
+  .chip select{border:0;background:transparent;padding:0;width:auto;font-weight:700;color:var(--ink)}
+
+  /* ---------- day cards (Kansen) ---------- */
+  .daycard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    padding:14px;margin-bottom:12px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .daycard.hit{border-color:color-mix(in srgb,var(--ball) 55%,var(--line))}
+  .daycard.hit::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(var(--accent),var(--ball))}
+  .daycard.miss{opacity:.72}
+  .dc-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+  .dc-dow{font-family:var(--font-display);font-weight:800;font-size:16px;text-transform:capitalize}
+  .dc-date{font-size:12.5px;color:var(--ink-3);font-weight:600}
+  .dc-today{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--accent-ink);background:var(--accent-soft);padding:2px 7px;border-radius:20px;margin-left:auto}
+  .slots{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .slot{display:flex;align-items:center;gap:12px;background:var(--ball-soft);
+    border:1px solid color-mix(in srgb,var(--ball) 40%,var(--line));
+    border-radius:12px;padding:10px 12px}
+  .slot .time{font-family:var(--font-display);font-weight:800;font-size:19px;color:var(--ink);
+    letter-spacing:-.01em;white-space:nowrap}
+  .slot .dur{font-size:11px;color:var(--ink-3);font-weight:700;margin-top:1px}
+  .slot .who{margin-left:auto;display:flex;align-items:center}
+  .avstack{display:flex;flex-direction:row-reverse}
+  .av{width:29px;height:29px;border-radius:50%;color:#fff;font-size:11.5px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;border:2.5px solid var(--surface);
+    margin-left:-9px;font-family:var(--font-display);flex:0 0 auto}
+  .slot .cnt{font-size:12px;font-weight:800;color:var(--good);margin-left:8px;white-space:nowrap}
+  .no-hit{display:flex;align-items:center;gap:8px;color:var(--ink-3);font-size:13px;
+    font-weight:600;margin-top:8px}
+  .roster-mini{display:flex;flex-wrap:wrap;gap:5px;margin-top:11px;
+    padding-top:11px;border-top:1px dashed var(--line)}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+    padding:3px 8px 3px 5px;border-radius:20px;background:var(--surface-2);color:var(--ink-2)}
+  .pill .pd{width:15px;height:15px;border-radius:5px;font-size:9px;font-weight:800;color:#fff;
+    display:flex;align-items:center;justify-content:center}
+
+  /* ---------- rooster grid ---------- */
+  .gridscroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);
+    background:var(--surface);box-shadow:var(--shadow)}
+  table.roster{border-collapse:collapse;width:100%;font-size:12px}
+  table.roster th,table.roster td{padding:0;text-align:center;white-space:nowrap}
+  table.roster thead th{position:sticky;top:0;background:var(--surface-2);
+    padding:7px 6px;font-weight:700;color:var(--ink-2);font-size:11px;
+    border-bottom:1px solid var(--line)}
+  table.roster thead th.wknd{color:var(--accent)}
+  table.roster th.namecol{position:sticky;left:0;z-index:2;background:var(--surface-2);
+    text-align:left;padding-left:12px;min-width:96px}
+  table.roster td.name{position:sticky;left:0;background:var(--surface);text-align:left;
+    padding:8px 10px;font-weight:700;font-size:12.5px;border-right:1px solid var(--line);
+    z-index:1;display:flex;align-items:center;gap:7px}
+  table.roster tbody tr{border-top:1px solid var(--line)}
+  .cell{width:34px;height:38px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:12px;font-family:var(--font-display);margin:2px auto}
+  .cell.O{background:var(--sh-O-bg);color:var(--sh-O)}
+  .cell.M{background:var(--sh-M-bg);color:var(--sh-M)}
+  .cell.N{background:var(--sh-N-bg);color:var(--sh-N)}
+  .cell.D{background:var(--sh-D-bg);color:var(--sh-D)}
+  .cell.V{background:transparent;color:var(--ink-3);font-weight:600}
+  td.wkndcol{background:color-mix(in srgb,var(--accent) 5%,transparent)}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin:14px 2px 0;font-size:11.5px;color:var(--ink-2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+  .legend i{width:16px;height:16px;border-radius:5px;font-style:normal;font-size:10px;font-weight:800;
+    display:flex;align-items:center;justify-content:center}
+
+  /* ---------- spelers ---------- */
+  .person{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+    padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow);display:flex;
+    align-items:center;gap:12px}
+  .person .av{margin:0;width:40px;height:40px;font-size:15px;border-width:0}
+  .person .meta{min-width:0}
+  .person .meta b{font-size:15px;font-family:var(--font-display);display:block}
+  .person .meta small{color:var(--ink-3);font-size:12px;font-weight:600}
+  .person .acts{margin-left:auto;display:flex;gap:6px}
+  .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink-2);font-size:15px;display:flex;
+    align-items:center;justify-content:center;padding:0}
+  .iconbtn.danger:hover{color:var(--bad);border-color:var(--bad)}
+  .addbtn{width:100%;border:1.5px dashed var(--line-2);background:var(--surface-2);
+    color:var(--accent);font-weight:750;font-size:14.5px;padding:15px;border-radius:var(--r);
+    display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+  .empty{text-align:center;color:var(--ink-3);padding:34px 16px;font-size:14px}
+  .empty .big{font-size:40px;margin-bottom:8px}
+
+  /* ---------- modal / sheet ---------- */
+  .sheet-bg{position:fixed;inset:0;background:rgba(6,20,21,.55);z-index:50;
+    display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;
+    transition:opacity .2s;backdrop-filter:blur(2px)}
+  .sheet-bg.on{opacity:1;pointer-events:auto}
+  .sheet{background:var(--surface);width:100%;max-width:640px;border-radius:22px 22px 0 0;
+    padding:8px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow-y:auto;
+    transform:translateY(100%);transition:transform .26s cubic-bezier(.2,.8,.2,1)}
+  .sheet-bg.on .sheet{transform:none}
+  .grab{width:38px;height:4px;border-radius:4px;background:var(--line-2);margin:8px auto 14px}
+  .sheet h2{font-size:19px;margin-bottom:16px}
+  .field{margin-bottom:15px}
+  .field>label{display:block;font-size:12px;font-weight:750;color:var(--ink-2);
+    text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px}
+  .hint{font-size:11.5px;color:var(--ink-3);font-weight:500;margin-top:6px;line-height:1.45}
+  .typegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .typegrid button{border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink);
+    border-radius:12px;padding:11px 12px;text-align:left;font-weight:700;font-size:13.5px;line-height:1.2}
+  .typegrid button small{display:block;color:var(--ink-3);font-weight:600;font-size:11px;margin-top:3px}
+  .typegrid button[aria-pressed="true"]{border-color:var(--accent);
+    background:var(--accent-soft);color:var(--accent-ink)}
+  .patrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .patrow .pc{width:38px;height:38px;border-radius:10px;border:0;font-weight:800;
+    font-family:var(--font-display);font-size:14px;color:#fff;position:relative}
+  .patrow .pc.O{background:var(--sh-O)}.patrow .pc.M{background:var(--sh-M)}
+  .patrow .pc.N{background:var(--sh-N)}.patrow .pc.D{background:var(--sh-D)}
+  .patrow .pc.V{background:var(--sh-V)}
+  .patrow .pcadd{width:38px;height:38px;border-radius:10px;border:1.5px dashed var(--line-2);
+    background:transparent;color:var(--ink-3);font-size:18px;font-weight:700}
+  .preview{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;
+    padding:11px;margin-top:4px}
+  .preview .pv-row{display:flex;gap:4px;overflow-x:auto;padding-bottom:2px}
+  .pv-day{flex:0 0 auto;text-align:center;font-size:10px;color:var(--ink-3);font-weight:700}
+  .pv-day .pv-s{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;
+    justify-content:center;font-weight:800;font-size:12px;font-family:var(--font-display);margin-bottom:3px}
+  .btnrow{display:flex;gap:10px;margin-top:8px}
+  .btn{flex:1;border:0;border-radius:12px;padding:14px;font-weight:750;font-size:15px}
+  .btn.primary{background:var(--accent);color:#fff}
+  .btn.ghost{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);flex:0 0 auto;padding:14px 18px}
+  .swatchrow{display:flex;gap:8px;flex-wrap:wrap}
+  .swatch{width:32px;height:32px;border-radius:50%;border:2.5px solid transparent;padding:0}
+  .swatch[aria-pressed="true"]{border-color:var(--ink)}
+  .settings-line{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+  .settings-line .k{font-weight:700;font-size:14px}
+  .settings-line .v{margin-left:auto;color:var(--ink-3);font-size:13px;font-weight:600}
+  .linkbtn{background:none;border:0;color:var(--accent);font-weight:750;font-size:13px;padding:0}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:12px;font-size:13.5px;
+    font-weight:650;z-index:80;opacity:0;pointer-events:none;transition:.25s;box-shadow:var(--shadow)}
+  .toast.on{opacity:1;transform:translateX(-50%)}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>PadelMatch</h1>
+        <div class="tag">Wanneer kunnen we met z'n vieren?</div>
+      </div>
+      <button class="sync local" id="syncBtn" title="Synchronisatie-status">
+        <span class="dot"></span><span id="syncTxt">Lokaal</span>
+      </button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="kansen">🎾 Kansen</button>
+      <button role="tab" aria-selected="false" data-tab="rooster">📅 Rooster</button>
+      <button role="tab" aria-selected="false" data-tab="spelers">👥 Spelers <span class="n" id="pcount">0</span></button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============ KANSEN ============ -->
+    <section class="view on" id="view-kansen" role="tabpanel">
+      <div class="ctrls">
+        <span class="chip"><label>Min. spelers</label>
+          <span class="step"><button id="minMinus" aria-label="minder">–</button>
+          <b id="minVal" class="mono-num">4</b>
+          <button id="minPlus" aria-label="meer">+</button></span>
+        </span>
+        <span class="chip"><label>Periode</label>
+          <select id="horizon">
+            <option value="7">7 dagen</option>
+            <option value="14" selected>2 weken</option>
+            <option value="28">4 weken</option>
+          </select>
+        </span>
+        <span class="chip"><label>Padeluren</label>
+          <select id="padWin">
+            <option value="8-23" selected>08–23</option>
+            <option value="17-23">17–23 (avond)</option>
+            <option value="6-24">hele dag</option>
+          </select>
+        </span>
+        <span class="chip"><label>Min. duur</label>
+          <select id="minDur">
+            <option value="1">1 uur</option>
+            <option value="1.5" selected>1½ uur</option>
+            <option value="2">2 uur</option>
+          </select>
+        </span>
+      </div>
+      <div id="kansenList"></div>
+    </section>
+
+    <!-- ============ ROOSTER ============ -->
+    <section class="view" id="view-rooster" role="tabpanel">
+      <div class="ctrls">
+        <span class="chip"><label>Periode</label>
+          <select id="horizon2">
+            <option value="7">7 dagen</option>
+            <option value="14" selected>2 weken</option>
+            <option value="28">4 weken</option>
+          </select>
+        </span>
+      </div>
+      <div id="rosterWrap"></div>
+      <div class="legend">
+        <span><i class="cell O" style="background:var(--sh-O-bg);color:var(--sh-O)">O</i> Ochtend 06–14</span>
+        <span><i class="cell M" style="background:var(--sh-M-bg);color:var(--sh-M)">M</i> Middag 14–22</span>
+        <span><i class="cell N" style="background:var(--sh-N-bg);color:var(--sh-N)">N</i> Nacht 22–06</span>
+        <span><i class="cell D" style="background:var(--sh-D-bg);color:var(--sh-D)">D</i> Dag 09–18</span>
+        <span><i class="cell V" style="background:var(--surface-2);color:var(--ink-3)">V</i> Vrij</span>
+      </div>
+      <p class="hint" style="margin:12px 2px">Na een <b>nachtdienst</b> geldt de ochtend erna als bezet (uitslapen tot 14:00) — de app rekent dat automatisch mee bij het zoeken naar gaten.</p>
+    </section>
+
+    <!-- ============ SPELERS ============ -->
+    <section class="view" id="view-spelers" role="tabpanel">
+      <div id="peopleList"></div>
+      <button class="addbtn" id="addBtn">＋ Speler toevoegen</button>
+      <div class="settings-line" style="margin-top:22px">
+        <span class="k">Groepscode</span>
+        <span class="v" id="groupCodeTxt">padel</span>
+        <button class="linkbtn" id="editGroup">wijzig</button>
+      </div>
+      <div class="settings-line">
+        <span class="k">Deel de app</span>
+        <button class="linkbtn" id="shareBtn" style="margin-left:auto">link kopiëren</button>
+      </div>
+      <p class="hint" style="margin-top:14px">Iedereen met dezelfde groepscode ziet hetzelfde rooster. Zonder cloud-sync blijft je invoer op dit apparaat.</p>
+    </section>
+  </main>
+</div>
+
+<!-- ============ SHEET (add/edit persoon) ============ -->
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- Firebase config: plak hier je eigen project (zie README) ---------- */
+  const FIREBASE_CONFIG = {
+    apiKey: "PLAK_HIER_JE_API_KEY",
+    databaseURL: "PLAK_HIER_JE_DATABASE_URL",
+    projectId: "PLAK_HIER_JE_PROJECT_ID"
+  };
+
+  /* ---------- shift-definities ---------- */
+  const SHIFTS = {
+    O:{label:"Ochtend",time:"06:00–14:00",work:[[6,14]]},
+    M:{label:"Middag", time:"14:00–22:00",work:[[14,22]]},
+    N:{label:"Nacht",  time:"22:00–06:00",work:[[22,24]]}, // slaap 00–14 volgende dag apart
+    D:{label:"Dagdienst",time:"09:00–18:00",work:[[9,18]]},
+    V:{label:"Vrij",   time:"vrij",        work:[]}
+  };
+  const CYCLE = ['O','M','N','D','V'];
+  const REF_MONDAY = "2024-01-01"; // een maandag, voor weekdag-gebonden roosters
+
+  const TYPES = {
+    dag:      {label:"Dagdienst",   sub:"ma–vr 09–18, weekend vrij", pattern:['D','D','D','D','D','V','V'], weekday:true},
+    vijf:     {label:"5-ploegen",   sub:"2×O, 2×M, 2×N, 4× vrij",   pattern:['O','O','M','M','N','N','V','V','V','V']},
+    drie:     {label:"3-ploegen",   sub:"week O / M / N, weekend vrij", pattern:['O','O','O','O','O','V','V','M','M','M','M','M','V','V','N','N','N','N','N','V','V']},
+    twee:     {label:"2-ploegen",   sub:"week O / week M",           pattern:['O','O','O','O','O','V','V','M','M','M','M','M','V','V']},
+    verschoven:{label:"Aangepast",  sub:"stel je eigen cyclus samen", pattern:['O','O','V','M','M','V']}
+  };
+
+  const PALETTE = ["#0FB3A6","#f2a63c","#7a6cf0","#e2683f","#3f7fe0","#12a98a","#d24c8e","#5b8c1e"];
+  const DOW = ["zo","ma","di","wo","do","vr","za"];
+  const MON = ["jan","feb","mrt","apr","mei","jun","jul","aug","sep","okt","nov","dec"];
+
+  /* ---------- date utils (UTC-dag, tz-veilig) ---------- */
+  const toDays = s=>{const[y,m,d]=s.split('-').map(Number);return Math.floor(Date.UTC(y,m-1,d)/864e5);};
+  function addDays(s,n){const[y,m,d]=s.split('-').map(Number);const t=new Date(Date.UTC(y,m-1,d)+n*864e5);
+    return t.getUTCFullYear()+"-"+String(t.getUTCMonth()+1).padStart(2,'0')+"-"+String(t.getUTCDate()).padStart(2,'0');}
+  function todayStr(){const t=new Date();return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,'0')+"-"+String(t.getDate()).padStart(2,'0');}
+  const dowOf=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay();};
+
+  /* ---------- rooster-berekening ---------- */
+  function shiftFor(p,date){
+    const pat=p.pattern||[]; if(!pat.length) return 'V';
+    const anchor = p.weekday ? REF_MONDAY : (p.anchor||REF_MONDAY);
+    const diff = toDays(date)-toDays(anchor);
+    return pat[((diff%pat.length)+pat.length)%pat.length];
+  }
+  function busyIntervals(p,date){
+    const s=shiftFor(p,date), prev=shiftFor(p,addDays(date,-1));
+    let iv=(SHIFTS[s].work||[]).map(x=>x.slice());
+    if(prev==='N') iv.push([0,14]); // uitslapen na nachtdienst
+    return iv;
+  }
+  const freeAt=(p,date,t)=>!busyIntervals(p,date).some(([a,b])=>t>=a && t<b);
+
+  // gezamenlijke padel-gaten op één dag voor een set spelers
+  function opportunities(date,people,minPlayers,ps,pe,minDur){
+    const step=0.5, blocks=[]; let cur=null;
+    const close=()=>{ if(cur && (cur.end-cur.start)>=minDur-1e-9) blocks.push(cur); cur=null; };
+    for(let t=ps;t+step<=pe+1e-9;t+=step){
+      const mid=t+step/2;
+      const free=people.filter(p=>freeAt(p,date,mid)).map(p=>p.id);
+      const set=new Set(free);
+      if(!cur){ if(set.size>=minPlayers) cur={start:t,end:t+step,ids:set}; continue; }
+      const inter=new Set([...cur.ids].filter(x=>set.has(x)));
+      if(inter.size>=minPlayers){ cur.ids=inter; cur.end=t+step; }
+      else { close(); if(set.size>=minPlayers) cur={start:t,end:t+step,ids:set}; }
+    }
+    close();
+    return blocks;
+  }
+  const fmtH=h=>{const H=Math.floor(h),M=Math.round((h-H)*60);return String(H).padStart(2,'0')+":"+String(M).padStart(2,'0');};
+  const fmtDur=h=>{const H=Math.floor(h),M=Math.round((h-H)*60);return H+(M?"u"+M:" uur");};
+
+  /* ================= STATE ================= */
+  let state={people:{}};
+  let group = localStorage.getItem('pm_group') || 'padel';
+  const prefs = JSON.parse(localStorage.getItem('pm_prefs')||'{}');
+  let minPlayers=prefs.minPlayers||4, horizon=prefs.horizon||14,
+      padWin=prefs.padWin||'8-23', minDur=prefs.minDur||1.5;
+  let cloud=null, useCloud=false, suppress=false;
+
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  const lsKey=()=>'pm_data_'+group;
+  const initials=n=>n.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()||'?';
+  const savePrefs=()=>localStorage.setItem('pm_prefs',JSON.stringify({minPlayers,horizon,padWin,minDur}));
+
+  function saveState(){
+    localStorage.setItem(lsKey(),JSON.stringify(state));
+    if(useCloud&&cloud){ try{ cloud.set(cloud.ref(cloud.db,'groups/'+group),state);}catch(e){console.warn(e);} }
+  }
+  function loadLocal(){ try{state=JSON.parse(localStorage.getItem(lsKey()))||{people:{}};}catch(e){state={people:{}};}
+    if(!state.people)state.people={}; }
+
+  /* ---------- cloud (optioneel, faalt stil terug naar lokaal) ---------- */
+  async function initCloud(){
+    if(!FIREBASE_CONFIG.databaseURL || /PLAK_HIER/.test(FIREBASE_CONFIG.databaseURL)) return;
+    try{
+      const appMod=await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js');
+      const dbMod =await import('https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js');
+      const app=appMod.initializeApp(FIREBASE_CONFIG);
+      const db=dbMod.getDatabase(app);
+      cloud={db,ref:dbMod.ref,set:dbMod.set};
+      useCloud=true; setSync(true);
+      dbMod.onValue(dbMod.ref(db,'groups/'+group),snap=>{
+        const v=snap.val();
+        if(v&&v.people){ state=v; render(); }
+        else { saveState(); } // eerste keer: push lokale data omhoog
+      });
+    }catch(e){ console.warn('Cloud uit, lokale modus:',e); useCloud=false; setSync(false); }
+  }
+  function setSync(on){
+    const b=$('#syncBtn');b.className='sync '+(on?'cloud':'local');
+    $('#syncTxt').textContent=on?'Live sync':'Lokaal';
+  }
+
+  /* ================= RENDER ================= */
+  function peopleArr(){return Object.values(state.people).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));}
+
+  function render(){
+    $('#pcount').textContent=Object.keys(state.people).length;
+    renderKansen(); renderRoster(); renderPeople();
+    $('#minVal').textContent=minPlayers;$('#groupCodeTxt').textContent=group;
+  }
+
+  function renderKansen(){
+    const el=$('#kansenList'), ppl=peopleArr();
+    if(ppl.length<4){
+      el.innerHTML=`<div class="empty"><div class="big">🎾</div>
+        Voeg minstens <b>4 spelers</b> toe met hun rooster.<br>Dan zie je hier meteen wanneer jullie samen kunnen padellen.
+        <div style="margin-top:16px"><button class="btn primary" style="max-width:220px;margin:0 auto" id="jumpAdd">＋ Speler toevoegen</button></div></div>`;
+      const j=$('#jumpAdd'); if(j)j.onclick=()=>{switchTab('spelers');openSheet();};
+      return;
+    }
+    const [ps,pe]=padWin.split('-').map(Number);
+    let html='';
+    for(let i=0;i<horizon;i++){
+      const date=addDays(todayStr(),i);
+      const blocks=opportunities(date,ppl,minPlayers,ps,pe,minDur);
+      const hit=blocks.length>0;
+      const dw=DOW[dowOf(date)], [Y,M,D]=date.split('-');
+      html+=`<div class="daycard ${hit?'hit':'miss'}">
+        <div class="dc-head">
+          <span class="dc-dow">${dw}</span>
+          <span class="dc-date mono-num">${+D} ${MON[+M-1]}</span>
+          ${i===0?'<span class="dc-today">Vandaag</span>':''}
+        </div>`;
+      if(hit){
+        html+='<div class="slots">';
+        blocks.forEach(b=>{
+          const who=[...b.ids].map(id=>state.people[id]).filter(Boolean);
+          const avs=who.slice(0,6).map(p=>`<span class="av" style="background:${p.color}" title="${p.name}">${initials(p.name)}</span>`).join('');
+          html+=`<div class="slot">
+            <div><div class="time mono-num">${fmtH(b.start)}–${fmtH(b.end)}</div>
+              <div class="dur">${fmtDur(b.end-b.start)} · ${who.length} spelers vrij</div></div>
+            <div class="who"><div class="avstack">${avs}</div>
+              <span class="cnt">${who.length>=4?'kan!':''}</span></div>
+          </div>`;
+        });
+        html+='</div>';
+      } else {
+        html+=`<div class="no-hit">— geen moment met ${minPlayers}+ spelers</div>`;
+      }
+      // mini-rooster van die dag
+      html+='<div class="roster-mini">';
+      ppl.forEach(p=>{const s=shiftFor(p,date);
+        html+=`<span class="pill"><span class="pd ${s}" style="background:var(--sh-${s})">${s}</span>${p.name.split(' ')[0]}</span>`;});
+      html+='</div></div>';
+    }
+    el.innerHTML=html;
+  }
+
+  function renderRoster(){
+    const el=$('#rosterWrap'), ppl=peopleArr();
+    if(!ppl.length){el.innerHTML=`<div class="empty">Nog geen spelers.</div>`;return;}
+    let h='<div class="gridscroll"><table class="roster"><thead><tr><th class="namecol">Speler</th>';
+    for(let i=0;i<horizon;i++){const date=addDays(todayStr(),i);const wd=dowOf(date),[,M,D]=date.split('-');
+      const wknd=(wd===0||wd===6);
+      h+=`<th class="${wknd?'wknd':''}">${DOW[wd]}<br><span class="mono-num" style="font-weight:800">${+D}</span></th>`;}
+    h+='</tr></thead><tbody>';
+    ppl.forEach(p=>{
+      h+=`<tr><td class="name"><span class="av" style="background:${p.color};width:24px;height:24px;font-size:10px">${initials(p.name)}</span>${p.name.split(' ')[0]}</td>`;
+      for(let i=0;i<horizon;i++){const date=addDays(todayStr(),i);const s=shiftFor(p,date);
+        const wknd=(dowOf(date)===0||dowOf(date)===6);
+        h+=`<td class="${wknd?'wkndcol':''}"><div class="cell ${s}">${s}</div></td>`;}
+      h+='</tr>';
+    });
+    h+='</tbody></table></div>';
+    el.innerHTML=h;
+  }
+
+  function renderPeople(){
+    const el=$('#peopleList'), ppl=peopleArr();
+    if(!ppl.length){el.innerHTML=`<div class="empty" style="padding:20px 10px">Nog geen spelers toegevoegd.</div>`;return;}
+    el.innerHTML=ppl.map(p=>{
+      const t=TYPES[p.type]||{label:p.type};
+      return `<div class="person">
+        <span class="av" style="background:${p.color}">${initials(p.name)}</span>
+        <div class="meta"><b>${escapeHtml(p.name)}</b><small>${t.label}${p.anchor&&!p.weekday?' · start '+(+p.anchor.split('-')[2])+' '+MON[+p.anchor.split('-')[1]-1]:''}</small></div>
+        <div class="acts">
+          <button class="iconbtn" data-edit="${p.id}" aria-label="bewerk">✎</button>
+          <button class="iconbtn danger" data-del="${p.id}" aria-label="verwijder">🗑</button>
+        </div></div>`;
+    }).join('');
+    $$('[data-edit]').forEach(b=>b.onclick=()=>openSheet(b.dataset.edit));
+    $$('[data-del]').forEach(b=>b.onclick=()=>{
+      const p=state.people[b.dataset.del];
+      if(confirm('“'+p.name+'” verwijderen?')){delete state.people[b.dataset.del];saveState();render();}
+    });
+  }
+  function escapeHtml(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+  /* ================= ADD / EDIT SHEET ================= */
+  let draft=null;
+  function openSheet(id){
+    const editing=!!id;
+    draft = editing ? JSON.parse(JSON.stringify(state.people[id]))
+      : {id:'p'+Date.now().toString(36),name:'',color:PALETTE[Object.keys(state.people).length%PALETTE.length],
+         type:'vijf',pattern:TYPES.vijf.pattern.slice(),anchor:todayStr(),createdAt:Date.now()};
+    renderSheet(editing);
+    $('#sheetBg').classList.add('on');
+  }
+  function closeSheet(){$('#sheetBg').classList.remove('on');draft=null;}
+
+  function renderSheet(editing){
+    const t=draft.type, def=TYPES[t];
+    const isWeekday = t==='dag';
+    const showPattern = (t==='twee'||t==='drie'||t==='verschoven');
+    const anchorLabel = t==='vijf' ? 'Datum van je eerste ochtenddienst'
+      : t==='verschoven' ? 'Startdatum van dag 1 van je cyclus'
+      : 'Eerste dag van je cyclus (een maandag werkt het makkelijkst)';
+    $('#sheet').innerHTML=`
+      <div class="grab"></div>
+      <h2>${editing?'Speler bewerken':'Speler toevoegen'}</h2>
+      <div class="field">
+        <label>Naam</label>
+        <input type="text" id="fName" placeholder="bv. Ricardo" value="${escapeHtml(draft.name)}" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Kleur</label>
+        <div class="swatchrow" id="swatches">
+          ${PALETTE.map(c=>`<button class="swatch" style="background:${c}" data-c="${c}" aria-pressed="${c===draft.color}"></button>`).join('')}
+        </div>
+      </div>
+      <div class="field">
+        <label>Roostertype</label>
+        <div class="typegrid" id="typegrid">
+          ${Object.entries(TYPES).map(([k,v])=>`<button data-t="${k}" aria-pressed="${k===t}">${v.label}<small>${v.sub}</small></button>`).join('')}
+        </div>
+      </div>
+      ${isWeekday?'':`<div class="field">
+        <label>${anchorLabel}</label>
+        <input type="date" id="fAnchor" value="${draft.anchor||todayStr()}">
+        <div class="hint">Vanaf deze datum rekent de app je hele rooster automatisch door.</div>
+      </div>`}
+      ${showPattern?`<div class="field">
+        <label>Cyclus <span style="text-transform:none;font-weight:600;color:var(--ink-3)">(tik om te wisselen O→M→N→D→Vrij)</span></label>
+        <div class="patrow" id="patrow"></div>
+        <div class="hint">Elke tegel = één dag. Voeg dagen toe/verwijder tot je volledige herhalende cyclus klopt.</div>
+      </div>`:''}
+      <div class="field">
+        <label>Voorbeeld — komende 14 dagen</label>
+        <div class="preview"><div class="pv-row" id="pvRow"></div></div>
+      </div>
+      <div class="btnrow">
+        <button class="btn primary" id="saveP">${editing?'Opslaan':'Toevoegen'}</button>
+        <button class="btn ghost" id="cancelP">Annuleer</button>
+      </div>`;
+
+    $('#fName').oninput=e=>{draft.name=e.target.value;updatePreview();};
+    $$('#swatches .swatch').forEach(b=>b.onclick=()=>{draft.color=b.dataset.c;
+      $$('#swatches .swatch').forEach(x=>x.setAttribute('aria-pressed',x.dataset.c===draft.color));});
+    $$('#typegrid button').forEach(b=>b.onclick=()=>{
+      draft.type=b.dataset.t; draft.weekday=(b.dataset.t==='dag');
+      draft.pattern=TYPES[b.dataset.t].pattern.slice();
+      renderSheet(editing);
+    });
+    if(!isWeekday){const a=$('#fAnchor'); if(a)a.onchange=e=>{draft.anchor=e.target.value;updatePreview();};}
+    if(showPattern) renderPatrow(editing);
+    updatePreview();
+    $('#saveP').onclick=()=>savePerson(editing);
+    $('#cancelP').onclick=closeSheet;
+  }
+
+  function renderPatrow(editing){
+    const row=$('#patrow'); if(!row)return;
+    row.innerHTML=draft.pattern.map((s,i)=>`<button class="pc ${s}" data-i="${i}">${s}</button>`).join('')
+      +`<button class="pcadd" id="patAdd" title="dag toevoegen">＋</button>`;
+    $$('#patrow .pc').forEach(b=>b.onclick=()=>{
+      const i=+b.dataset.i, cur=draft.pattern[i], ni=(CYCLE.indexOf(cur)+1)%CYCLE.length;
+      draft.pattern[i]=CYCLE[ni]; renderPatrow(editing); updatePreview();
+    });
+    $$('#patrow .pc').forEach(b=>b.oncontextmenu=e=>{e.preventDefault();
+      if(draft.pattern.length>1){draft.pattern.splice(+b.dataset.i,1);renderPatrow(editing);updatePreview();}});
+    $('#patAdd').onclick=()=>{draft.pattern.push('V');renderPatrow(editing);updatePreview();};
+  }
+
+  function updatePreview(){
+    const row=$('#pvRow'); if(!row)return;
+    let h='';
+    for(let i=0;i<14;i++){const date=addDays(todayStr(),i);const s=shiftFor(draft,date);const wd=dowOf(date),[,,D]=date.split('-');
+      h+=`<div class="pv-day"><div class="pv-s ${s}" style="background:var(--sh-${s}-bg);color:var(--sh-${s})">${s}</div>${DOW[wd]}<br>${+D}</div>`;}
+    row.innerHTML=h;
+  }
+
+  function savePerson(editing){
+    const name=($('#fName').value||'').trim();
+    if(!name){$('#fName').focus();$('#fName').style.borderColor='var(--bad)';return;}
+    draft.name=name;
+    if(draft.type==='dag'){draft.weekday=true;draft.pattern=TYPES.dag.pattern.slice();}
+    state.people[draft.id]=draft;
+    saveState();render();closeSheet();
+    toast(editing?'Speler bijgewerkt':'Speler toegevoegd 🎾');
+  }
+
+  /* ================= UI wiring ================= */
+  function switchTab(name){
+    $$('.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name));
+    $$('.view').forEach(v=>v.classList.toggle('on',v.id==='view-'+name));
+  }
+  $$('.tabs button').forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+  $('#addBtn').onclick=()=>openSheet();
+  $('#sheetBg').onclick=e=>{if(e.target===$('#sheetBg'))closeSheet();};
+
+  function bindCtrl(id,fn){const e=$(id);if(e)e.onchange=fn;}
+  $('#minPlus').onclick=()=>{minPlayers=Math.min(12,minPlayers+1);savePrefs();render();};
+  $('#minMinus').onclick=()=>{minPlayers=Math.max(2,minPlayers-1);savePrefs();render();};
+  bindCtrl('#horizon',e=>{horizon=+e.target.value;$('#horizon2').value=horizon;savePrefs();render();});
+  bindCtrl('#horizon2',e=>{horizon=+e.target.value;$('#horizon').value=horizon;savePrefs();render();});
+  bindCtrl('#padWin',e=>{padWin=e.target.value;savePrefs();render();});
+  bindCtrl('#minDur',e=>{minDur=+e.target.value;savePrefs();render();});
+  $('#minVal').textContent=minPlayers;$('#horizon').value=horizon;$('#horizon2').value=horizon;
+  $('#padWin').value=padWin;$('#minDur').value=minDur;
+
+  $('#editGroup').onclick=()=>{
+    const g=prompt('Groepscode (iedereen met dezelfde code deelt één rooster):',group);
+    if(g&&g.trim()){group=g.trim().toLowerCase();localStorage.setItem('pm_group',group);
+      loadLocal();render();if(useCloud){location.reload();}}
+  };
+  $('#shareBtn').onclick=async()=>{
+    const url=location.href.split('#')[0]+'#g='+group;
+    try{await navigator.clipboard.writeText(url);toast('Link gekopieerd 📋');}
+    catch(e){prompt('Kopieer deze link:',url);}
+  };
+
+  let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');
+    clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200);}
+
+  /* ---------- init ---------- */
+  const h=location.hash.match(/g=([\w-]+)/); if(h){group=h[1].toLowerCase();localStorage.setItem('pm_group',group);}
+  loadLocal(); render(); initCloud();
+})();
+</script>
+
+</body>
+</html>

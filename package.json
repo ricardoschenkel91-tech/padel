@@ -1,0 +1,16 @@
+{
+  "name": "padelmatch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Wanneer kan de vriendengroep samen padellen — planning op basis van ploegendienstroosters.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
