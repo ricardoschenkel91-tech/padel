@@ -10,10 +10,9 @@ import {
 import { DOW, fmtWindow, niceDate, PERIOD_OPTIONS, SHIFT_LABEL } from "../lib/ui";
 
 const OPTIONS: { status: AvailabilityStatus; label: string; cls: string }[] = [
-  { status: "AUTO", label: "Auto", cls: "b-auto" },
+  { status: "AUTO", label: "Idle", cls: "b-idle" },
   { status: "BESCHIKBAAR", label: "Ik kan", cls: "b-ok" },
-  { status: "NIET_BESCHIKBAAR", label: "Kan niet", cls: "b-no" },
-  { status: "MISSCHIEN", label: "Misschien", cls: "b-maybe" },
+  { status: "NIET_BESCHIKBAAR", label: "Ik kan niet", cls: "b-no" },
 ];
 
 export function AvailabilityPage() {
@@ -95,9 +94,12 @@ export function AvailabilityPage() {
                 ))}
               </div>
               <div className="reason">
+                {current === "AUTO" && (
+                  <b style={{ color: "var(--ink-3)" }}>Idle — nog te bevestigen · </b>
+                )}
                 {res.intervals.length
-                  ? `Beschikbaar: ${res.intervals.map(fmtWindow).join(", ")} — ${res.reason}`
-                  : `Niet beschikbaar — ${res.reason}`}
+                  ? `rooster: ${res.intervals.map(fmtWindow).join(", ")} (${res.reason})`
+                  : `rooster: niet beschikbaar (${res.reason})`}
               </div>
             </div>
           );

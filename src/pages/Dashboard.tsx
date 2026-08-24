@@ -139,11 +139,19 @@ function DayCard({
                 </div>
                 <div className="who">
                   <div className="avstack">
-                    {who.slice(0, 6).map((p) => (
-                      <span key={p.id} className="av" style={{ background: p.color }} title={p.fullName}>
-                        {initials(p.displayName)}
-                      </span>
-                    ))}
+                    {who.slice(0, 6).map((p) => {
+                      const confirmed = state.availability[p.id + "|" + date]?.status === "BESCHIKBAAR";
+                      return (
+                        <span
+                          key={p.id}
+                          className={"av" + (confirmed ? "" : " idle")}
+                          style={{ background: confirmed ? p.color : "var(--sh-V)" }}
+                          title={p.fullName + (confirmed ? " — kan!" : " — nog geen keuze")}
+                        >
+                          {initials(p.displayName)}
+                        </span>
+                      );
+                    })}
                   </div>
                   <span className={"cnt " + lvl}>{canPlay ? "kan!" : who.length}</span>
                   {canPlay && <span className="chev">{isOpen ? "▲" : "▼"}</span>}

@@ -169,14 +169,13 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .avday{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow)}
 .avday-head{display:flex;align-items:center;gap:8px;margin-bottom:9px}
 .avday-head .shift{margin-left:auto;font-size:11px;font-weight:800;padding:3px 8px;border-radius:8px}
-.statusrow{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.statusrow{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .statusrow button{border:1.5px solid var(--line);background:var(--surface-2);color:var(--ink-2);border-radius:10px;
-  padding:9px 4px;font-size:12px;font-weight:700}
+  padding:11px 4px;font-size:12.5px;font-weight:700}
 .statusrow button[aria-pressed="true"]{color:#fff;border-color:transparent}
 .statusrow button.b-ok[aria-pressed="true"]{background:var(--green)}
 .statusrow button.b-no[aria-pressed="true"]{background:var(--red)}
-.statusrow button.b-maybe[aria-pressed="true"]{background:var(--yellow)}
-.statusrow button.b-auto[aria-pressed="true"]{background:var(--accent)}
+.statusrow button.b-idle[aria-pressed="true"]{background:var(--ink-3)}
 .reason{font-size:11.5px;color:var(--ink-3);margin-top:8px}
 
 /* sheet/modal */
