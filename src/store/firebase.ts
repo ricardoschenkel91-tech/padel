@@ -42,9 +42,16 @@ export async function subscribeGroup(
   const ok = await ensureInit();
   if (!ok || !firestore || !fs) return () => {};
   const ref = fs.doc(firestore, "groups", code);
-  return fs.onSnapshot(ref, (snap) => {
-    onChange(snap.exists() ? (snap.data() as { state: GroupState }).state : null);
-  });
+  return fs.onSnapshot(
+    ref,
+    (snap) => {
+      onChange(snap.exists() ? (snap.data() as { state: GroupState }).state : null);
+    },
+    (err) => {
+      // Bv. database nog niet aangemaakt of regels te streng: val stil terug op lokaal.
+      console.warn("Firestore sync-fout (lokale modus blijft werken):", err);
+    },
+  );
 }
 
 /** Sla de volledige groepsstaat op in de cloud (indien beschikbaar). */

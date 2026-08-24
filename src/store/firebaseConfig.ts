@@ -1,15 +1,12 @@
 /**
- * Firebase-config. Vul deze in met je eigen (gratis) Firebase-project om
- * live-sync tussen telefoons aan te zetten — zie README. Zolang hier de
- * PLAK_HIER-placeholders staan, werkt de app gewoon lokaal (per apparaat).
- *
- * De apiKey mag publiek in de code staan; dat is bij Firebase by design.
+ * Firebase-config voor live-sync. Deze waarden mogen publiek in de code staan;
+ * bij Firebase is dat by design (de beveiliging zit in de Firestore-regels).
  */
 export const firebaseConfig = {
-  apiKey: "PLAK_HIER_JE_API_KEY",
-  authDomain: "PLAK_HIER.firebaseapp.com",
-  projectId: "PLAK_HIER_JE_PROJECT_ID",
-  appId: "PLAK_HIER_JE_APP_ID",
+  apiKey: "AIzaSyDGveXcM6vS79XrCoZUwCiJxZcxtbLnDBM",
+  authDomain: "padelmatch-b5cb1.firebaseapp.com",
+  projectId: "padelmatch-b5cb1",
+  appId: "1:178244907899:web:7571dc09080f20e13bc3de",
 };
 
 export function firebaseConfigured(): boolean {
