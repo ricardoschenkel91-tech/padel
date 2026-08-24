@@ -5,3 +5,4 @@ export * from "./availability";
 export * from "./restrictions";
 export * from "./slots";
 export * from "./seed";
+export * from "./holidays";

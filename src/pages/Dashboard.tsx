@@ -1,6 +1,15 @@
 import { useMemo, useState } from "react";
 import { useGroup } from "../store/GroupProvider";
-import { addDays, isoWeek, playableSlotsForDate, todayStr, type Location, type PlayableSlot } from "../core";
+import {
+  addDays,
+  holidayFor,
+  isoWeek,
+  playableSlotsForDate,
+  schoolVacationFor,
+  todayStr,
+  type Location,
+  type PlayableSlot,
+} from "../core";
 import { DOW, fmtDuration, fmtHour, fmtWindow, initials, niceDate, PERIOD_OPTIONS, timeToHour } from "../lib/ui";
 
 function level(n: number): "green" | "yellow" | "orange" {
@@ -100,15 +109,26 @@ function DayCard({
   const locations = Object.values(state.locations).filter((l) => l.active);
   const [open, setOpen] = useState<number | null>(null);
   const booking = Object.values(state.bookings).find((b) => b.date === date);
+  const holiday = holidayFor(date);
+  const vacation = schoolVacationFor(date);
   const best = slots.reduce((mx, s) => Math.max(mx, s.availablePlayers.length), 0);
   const lv = best >= 4 ? "green" : best === 3 ? "yellow" : "orange";
 
   return (
-    <div className={"daycard lv-" + lv + (booking ? " confirmed" : "")}>
+    <div className={"daycard lv-" + lv + (booking ? " confirmed" : "") + (holiday ? " festive" : "")}>
+      {holiday?.emoji === "🎄" && (
+        <div className="snow" aria-hidden>
+          <span className="flake f0">❄️</span>
+          <span className="flake f1">❄️</span>
+          <span className="flake f2">❄️</span>
+        </div>
+      )}
       <div className="dc-head">
         <span className="dc-dow">{DOW[new Date(date + "T00:00:00Z").getUTCDay()]}</span>
         <span className="dc-date mono">{niceDate(date)}</span>
         <span className="dc-wk mono">wk {isoWeek(date)}</span>
+        {holiday && <span className="hol" title={holiday.name}>{holiday.emoji} {holiday.name}</span>}
+        {vacation && <span className="vac" title="Schoolvakantie Noord">🏖️ {vacation.name}</span>}
         {booking ? (
           <span className="badge conf">Gereserveerd</span>
         ) : isToday ? (

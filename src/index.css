@@ -304,3 +304,18 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .hdr-right .sync,.hdr-right .profile{margin-left:0}
 .gearbtn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--surface);
   color:var(--ink-2);font-size:16px;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:var(--shadow)}
+
+/* feestdag & vakantie markers + subtiele sfeer */
+.hol{font-size:10.5px;font-weight:800;color:var(--accent-ink);background:var(--accent-soft);
+  padding:2px 8px;border-radius:20px;display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+.vac{font-size:10px;font-weight:700;color:var(--ink-3);background:var(--surface-2);
+  padding:2px 7px;border-radius:20px;white-space:nowrap}
+.daycard.festive .hol{animation:twinkle 2.6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(1);opacity:.92}50%{transform:scale(1.14);opacity:1}}
+/* zachte sneeuw voor kerst */
+.snow{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.snow .flake{position:absolute;top:-14px;font-size:12px;opacity:.55;animation:fall linear infinite}
+.snow .f0{left:16%;animation-duration:7s;animation-delay:0s}
+.snow .f1{left:52%;animation-duration:9s;animation-delay:1.4s}
+.snow .f2{left:82%;animation-duration:8s;animation-delay:2.6s}
+@keyframes fall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(240px) rotate(180deg);opacity:0}}

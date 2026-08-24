@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useGroup } from "../store/GroupProvider";
-import { addDays, playerShift, todayStr } from "../core";
+import { addDays, holidayFor, playerShift, todayStr } from "../core";
 import { DOW, initials, PERIOD_OPTIONS } from "../lib/ui";
 
 export function Roster() {
@@ -38,11 +38,13 @@ export function Roster() {
               <th className="namecol">Speler</th>
               {dates.map((d) => {
                 const wd = new Date(d + "T00:00:00Z").getUTCDay();
+                const h = holidayFor(d);
                 return (
                   <th key={d} className={wd === 0 || wd === 6 ? "wknd" : ""}>
                     {DOW[wd]}
                     <br />
                     <span className="mono" style={{ fontWeight: 800 }}>{+d.split("-")[2]}</span>
+                    {h && <span title={h.name} style={{ display: "block", fontSize: 11, lineHeight: 1 }}>{h.emoji}</span>}
                   </th>
                 );
               })}
