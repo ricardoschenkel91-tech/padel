@@ -238,3 +238,24 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .keypad .k-ghost{border:0;background:transparent;box-shadow:none;font-size:20px;color:var(--ink-3)}
 .keypad .k-ok{background:var(--accent);color:#fff;border-color:transparent}
 .keypad .k-ok:disabled{opacity:.4}
+
+/* segmented filter (Ik kan ook / Hele groep) */
+.seg{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:3px;box-shadow:var(--shadow)}
+.seg button{border:0;background:transparent;color:var(--ink-2);font-weight:700;font-size:12.5px;
+  padding:6px 14px;border-radius:16px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+
+/* klikbare tegel + locatiepaneel */
+.slot.clickable{cursor:pointer;transition:filter .15s}
+.slot.clickable:hover{filter:brightness(1.02)}
+.slot .chev{margin-left:8px;color:var(--ink-3);font-size:10px}
+.locpanel{display:flex;flex-direction:column;gap:8px;margin-top:8px;animation:fade .2s ease}
+@keyframes fade{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.locpanel .lhead{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);margin:2px 2px 0}
+.locrow{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:12px;padding:10px 12px}
+.locrow .licon{font-size:18px;flex:0 0 auto}
+.locrow .lmeta{min-width:0}
+.locrow .lmeta b{font-size:13.5px;font-family:var(--font-display);display:block}
+.locrow .lmeta small{color:var(--ink-3);font-size:11.5px;font-weight:600}
+.locrow a.book{margin-left:auto;flex:0 0 auto;color:var(--accent);font-weight:750;font-size:12.5px;text-decoration:none;white-space:nowrap}

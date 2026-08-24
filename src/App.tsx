@@ -41,7 +41,6 @@ export function App() {
           <div className="logo" aria-hidden />
           <div>
             <h1>PadelMatch</h1>
-            <div className="tag">Wanneer kunnen we met z'n vieren?</div>
           </div>
           {currentPlayer ? (
             <button
