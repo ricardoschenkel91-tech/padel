@@ -30,6 +30,12 @@ export function fmtWindow(iv: Interval): string {
   return `${fmtHour(iv.start)}–${fmtHour(iv.end)}`;
 }
 
+/** "HH:MM" → uur als kommagetal. */
+export function timeToHour(s: string): number {
+  const [H, M] = s.split(":").map(Number);
+  return H + (M || 0) / 60;
+}
+
 export function fmtDuration(min: number): string {
   const h = Math.floor(min / 60);
   const m = min % 60;

@@ -59,5 +59,7 @@ export async function saveGroup(code: string, state: GroupState): Promise<void> 
   const ok = await ensureInit();
   if (!ok || !firestore || !fs) return;
   const ref = fs.doc(firestore, "groups", code);
-  await fs.setDoc(ref, { state, updatedAt: Date.now() });
+  // Firestore accepteert geen undefined-velden → via JSON strippen we die.
+  const clean = JSON.parse(JSON.stringify(state));
+  await fs.setDoc(ref, { state: clean, updatedAt: Date.now() });
 }

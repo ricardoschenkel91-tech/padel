@@ -164,6 +164,20 @@ export interface GroupSettings {
   pinProtected?: boolean;
 }
 
+/** Een bevestigde reservering (spec §23). */
+export interface Booking {
+  id: string;
+  date: DateStr;
+  start: number; // klok-uur
+  end: number; // klok-uur
+  locationId: string;
+  court?: string; // baan
+  playerIds: string[];
+  bookedBy?: string;
+  note?: string;
+  createdAt: number;
+}
+
 /** Gedeelde staat van één groep — dit is wat gesynct/opgeslagen wordt. */
 export interface GroupState {
   settings: GroupSettings;
@@ -172,4 +186,5 @@ export interface GroupState {
   restrictions: Record<string, CombinationRestriction>;
   overrides: CombinationOverride[];
   locations: Record<string, Location>;
+  bookings: Record<string, Booking>;
 }

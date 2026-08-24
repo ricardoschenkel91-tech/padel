@@ -3,12 +3,14 @@ import { useGroup } from "./store/GroupProvider";
 import { PinLock } from "./components/PinLock";
 import { PinModal } from "./components/PinModal";
 import { Dashboard } from "./pages/Dashboard";
+import { Reserved } from "./pages/Reserved";
 import { AvailabilityPage } from "./pages/Availability";
 import { Players } from "./pages/Players";
 import { Roster } from "./pages/Roster";
 import { initials } from "./lib/ui";
+import { todayStr } from "./core";
 
-type Tab = "kansen" | "beschikbaar" | "rooster" | "spelers";
+type Tab = "kansen" | "gereserveerd" | "beschikbaar" | "rooster" | "spelers";
 
 export function App() {
   const { state, sync, code, setCode, currentPlayer, logout, revealPins, setRevealPins } = useGroup();
@@ -33,6 +35,8 @@ export function App() {
     );
 
   const playerCount = Object.values(state.players).filter((p) => p.active && !p.reserve).length;
+  const today = todayStr();
+  const bookingCount = Object.values(state.bookings).filter((b) => b.date >= today).length;
 
   return (
     <div className="app">
@@ -66,11 +70,14 @@ export function App() {
           <button role="tab" aria-selected={tab === "kansen"} onClick={() => setTab("kansen")}>
             🎾 Kansen
           </button>
+          <button role="tab" aria-selected={tab === "gereserveerd"} onClick={() => setTab("gereserveerd")}>
+            📅 Gepland{bookingCount ? <span className="n">{bookingCount}</span> : null}
+          </button>
           <button role="tab" aria-selected={tab === "beschikbaar"} onClick={() => setTab("beschikbaar")}>
-            🗓 Beschikbaarheid
+            🗓 Beschikbaar
           </button>
           <button role="tab" aria-selected={tab === "rooster"} onClick={() => setTab("rooster")}>
-            📅 Rooster
+            📋 Rooster
           </button>
           <button role="tab" aria-selected={tab === "spelers"} onClick={() => setTab("spelers")}>
             👥 <span className="n">{playerCount}</span>
@@ -79,6 +86,7 @@ export function App() {
       </header>
       <main>
         {tab === "kansen" && <Dashboard />}
+        {tab === "gereserveerd" && <Reserved />}
         {tab === "beschikbaar" && <AvailabilityPage />}
         {tab === "rooster" && <Roster />}
         {tab === "spelers" && <Players />}

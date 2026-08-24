@@ -106,5 +106,5 @@ export function seedGroupState(): GroupState {
     seedRestrictions(settings.id).map((r) => [r.id, r]),
   );
   const locations = Object.fromEntries(seedLocations().map((l) => [l.id, l]));
-  return { settings, players, restrictions, overrides: [], locations, availability: {} };
+  return { settings, players, restrictions, overrides: [], locations, availability: {}, bookings: {} };
 }

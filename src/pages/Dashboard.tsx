@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useGroup } from "../store/GroupProvider";
 import { addDays, isoWeek, playableSlotsForDate, todayStr, type Location, type PlayableSlot } from "../core";
-import { DOW, fmtDuration, fmtWindow, initials, niceDate, PERIOD_OPTIONS } from "../lib/ui";
+import { DOW, fmtDuration, fmtHour, fmtWindow, initials, niceDate, PERIOD_OPTIONS, timeToHour } from "../lib/ui";
 
 function level(n: number): "green" | "yellow" | "orange" {
   return n >= 4 ? "green" : n === 3 ? "yellow" : "orange";
@@ -99,16 +99,21 @@ function DayCard({
   const { state } = useGroup();
   const locations = Object.values(state.locations).filter((l) => l.active);
   const [open, setOpen] = useState<number | null>(null);
+  const booking = Object.values(state.bookings).find((b) => b.date === date);
   const best = slots.reduce((mx, s) => Math.max(mx, s.availablePlayers.length), 0);
   const lv = best >= 4 ? "green" : best === 3 ? "yellow" : "orange";
 
   return (
-    <div className={"daycard lv-" + lv}>
+    <div className={"daycard lv-" + lv + (booking ? " confirmed" : "")}>
       <div className="dc-head">
         <span className="dc-dow">{DOW[new Date(date + "T00:00:00Z").getUTCDay()]}</span>
         <span className="dc-date mono">{niceDate(date)}</span>
         <span className="dc-wk mono">wk {isoWeek(date)}</span>
-        {isToday && <span className="badge today">Vandaag</span>}
+        {booking ? (
+          <span className="badge conf">Gereserveerd</span>
+        ) : isToday ? (
+          <span className="badge today">Vandaag</span>
+        ) : null}
       </div>
 
       <div className="slots">
@@ -164,7 +169,7 @@ function DayCard({
                   {myWarn.reason ? ` — ${myWarn.reason}` : ""}
                 </div>
               )}
-              {canPlay && isOpen && <LocationsPanel locations={locations} />}
+              {canPlay && isOpen && <LocationsPanel locations={locations} date={date} slot={s} />}
             </div>
           );
         })}
@@ -173,33 +178,92 @@ function DayCard({
   );
 }
 
-function LocationsPanel({ locations }: { locations: Location[] }) {
+function LocationsPanel({ locations, date, slot }: { locations: Location[]; date: string; slot: PlayableSlot }) {
+  const { state, upsertBooking, currentPlayer } = useGroup();
+  const [openLoc, setOpenLoc] = useState<string | null>(null);
+  const [start, setStart] = useState(fmtHour(slot.window.start));
+  const [dur, setDur] = useState(slot.recommendedDurationMin || 90);
+  const [court, setCourt] = useState("");
+  const [done, setDone] = useState(false);
+
   if (!locations.length) {
     return <div className="locpanel"><div className="lhead">Nog geen locaties toegevoegd</div></div>;
   }
+  if (done) {
+    return (
+      <div className="locpanel">
+        <div className="lhead" style={{ color: "var(--purple)" }}>✓ Gereserveerd — zie het tabblad “Gereserveerd”.</div>
+      </div>
+    );
+  }
+
+  const confirmBooking = (locId: string) => {
+    const s = timeToHour(start);
+    const e = s + dur / 60;
+    const confirmed = slot.availablePlayers.filter(
+      (id) => state.availability[id + "|" + date]?.status === "BESCHIKBAAR",
+    );
+    const playerIds = confirmed.length ? confirmed : slot.availablePlayers;
+    upsertBooking({
+      id: "bk" + Date.now().toString(36),
+      date,
+      start: s,
+      end: e,
+      locationId: locId,
+      court: court.trim() || undefined,
+      playerIds,
+      bookedBy: currentPlayer?.id,
+      createdAt: Date.now(),
+    });
+    setOpenLoc(null);
+    setDone(true);
+  };
+
   return (
     <div className="locpanel">
       <div className="lhead">Beschikbare banen — kies waar je speelt</div>
       {locations.map((l) => (
-        <div className="locrow" key={l.id}>
-          <span className="licon">🎾</span>
-          <div className="lmeta">
-            <b>{l.name}</b>
-            <small>{l.city} · {l.address}{l.indoor ? " · indoor" : ""}</small>
+        <div key={l.id}>
+          <div className="locrow">
+            <span className="licon">🎾</span>
+            <div className="lmeta">
+              <b>{l.name}</b>
+              <small>{l.city} · {l.address}{l.indoor ? " · indoor" : ""}</small>
+            </div>
+            <div className="locacts">
+              <a
+                className="book"
+                href={l.bookingUrl || l.website || `https://www.google.com/search?q=${encodeURIComponent(l.name + " padel reserveren")}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Boek online →
+              </a>
+              <button className="book bookbtn" onClick={() => setOpenLoc(openLoc === l.id ? null : l.id)}>
+                Reserveren
+              </button>
+            </div>
           </div>
-          {l.bookingUrl ? (
-            <a className="book" href={l.bookingUrl} target="_blank" rel="noreferrer">Reserveren →</a>
-          ) : l.website ? (
-            <a className="book" href={l.website} target="_blank" rel="noreferrer">Website →</a>
-          ) : (
-            <a
-              className="book"
-              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(l.name + " " + l.city)}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Route →
-            </a>
+          {openLoc === l.id && (
+            <div className="bookform">
+              <div className="bfrow">
+                <span>Tijd</span>
+                <input type="time" value={start} onChange={(e) => setStart(e.target.value)} />
+              </div>
+              <div className="bfrow">
+                <span>Duur</span>
+                <select value={dur} onChange={(e) => setDur(+e.target.value)}>
+                  {state.settings.durationsMin.map((d) => (
+                    <option key={d} value={d}>{d} min</option>
+                  ))}
+                </select>
+              </div>
+              <div className="bfrow">
+                <span>Baan</span>
+                <input type="text" placeholder="bv. 3" value={court} onChange={(e) => setCourt(e.target.value)} />
+              </div>
+              <button className="btn primary" onClick={() => confirmBooking(l.id)}>Bevestig reservering</button>
+            </div>
           )}
         </div>
       ))}

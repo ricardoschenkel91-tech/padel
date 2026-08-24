@@ -17,6 +17,7 @@ import {
 import {
   seedGroupState,
   type AvailabilityEntry,
+  type Booking,
   type CombinationRestriction,
   type GroupSettings,
   type GroupState,
@@ -45,6 +46,8 @@ interface GroupContextValue {
   updateSettings: (patch: Partial<GroupSettings>) => void;
   upsertRestriction: (r: CombinationRestriction) => void;
   removeRestriction: (id: string) => void;
+  upsertBooking: (b: Booking) => void;
+  removeBooking: (id: string) => void;
   login: (pin: string) => Promise<boolean>;
   logout: () => void;
   assignPin: (playerId: string) => Promise<string>;
@@ -59,10 +62,22 @@ const Ctx = createContext<GroupContextValue | null>(null);
 const initialGroup = (): string => localStorage.getItem("pm_group") || "schenkel";
 const lsKey = (code: string) => "pm_state_" + code;
 
+/** Zorg dat oudere/gesynct opgeslagen staat alle verplichte maps heeft. */
+export function withDefaults(s: GroupState): GroupState {
+  return {
+    ...s,
+    availability: s.availability ?? {},
+    restrictions: s.restrictions ?? {},
+    overrides: s.overrides ?? [],
+    locations: s.locations ?? {},
+    bookings: s.bookings ?? {},
+  };
+}
+
 function loadLocal(code: string): GroupState {
   try {
     const raw = localStorage.getItem(lsKey(code));
-    if (raw) return JSON.parse(raw) as GroupState;
+    if (raw) return withDefaults(JSON.parse(raw) as GroupState);
   } catch {
     /* val terug op seed */
   }
@@ -119,8 +134,9 @@ export function GroupProvider({ children }: { children: ReactNode }) {
       if (!active) return;
       if (remote) {
         applyingRemote.current = true;
-        setState(remote);
-        localStorage.setItem(lsKey(code), JSON.stringify(remote));
+        const normalized = withDefaults(remote);
+        setState(normalized);
+        localStorage.setItem(lsKey(code), JSON.stringify(normalized));
         applyingRemote.current = false;
       } else {
         // Groep bestaat nog niet in de cloud: push huidige lokale staat omhoog.
@@ -240,6 +256,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
           const restrictions = { ...s.restrictions };
           delete restrictions[id];
           return { ...s, restrictions };
+        }),
+      upsertBooking: (bk) =>
+        update((s) => ({ ...s, bookings: { ...s.bookings, [bk.id]: bk } })),
+      removeBooking: (id) =>
+        update((s) => {
+          const bookings = { ...s.bookings };
+          delete bookings[id];
+          return { ...s, bookings };
         }),
       revealPins,
       setRevealPins,
