@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { autoAvailability, resolveAvailability } from "../availability";
+import {
+  autoAvailability,
+  mergeInterval,
+  resolveAvailability,
+  subtractInterval,
+} from "../availability";
 import { seedGroupState } from "../seed";
-import type { AvailabilityEntry } from "../types";
+import type { AvailabilityEntry, Player } from "../types";
 
 const state = seedGroupState();
 const maurice = state.players["maurice-t"];
@@ -69,5 +74,39 @@ describe("handmatige beschikbaarheid heeft voorrang (spec §8)", () => {
   it("inactieve speler is nooit beschikbaar", () => {
     const inactief = { ...ricardo, active: false };
     expect(resolveAvailability(inactief, "2026-08-30").intervals).toEqual([]);
+  });
+});
+
+describe("afwezigheid en vaste weekregels", () => {
+  it("afwezigheidsperiode maakt niet beschikbaar", () => {
+    const weg: Player = { ...lars, absences: [{ from: "2026-09-01", to: "2026-09-07" }] };
+    expect(resolveAvailability(weg, "2026-09-03").intervals).toEqual([]); // di, normaal 18-23
+    expect(resolveAvailability(weg, "2026-09-08").intervals.length).toBeGreaterThan(0); // na afwezigheid
+  });
+
+  it("interval-helpers: subtract en merge", () => {
+    expect(subtractInterval([{ start: 18, end: 23 }], 18, 22)).toEqual([{ start: 22, end: 23 }]);
+    expect(mergeInterval([{ start: 18, end: 23 }], { start: 8, end: 12 })).toEqual([
+      { start: 8, end: 12 },
+      { start: 18, end: 23 },
+    ]);
+  });
+
+  it("weekregel 'elke vrijdagavond niet' haalt het avondblok weg", () => {
+    const p: Player = {
+      ...lars,
+      recurringRules: [{ id: "r1", weekdays: [5], block: "avond", status: "NIET_BESCHIKBAAR" }],
+    };
+    // 2026-08-28 = vrijdag; dagdienst-basis 18–23 → min avond 18–22 = 22–23.
+    expect(resolveAvailability(p, "2026-08-28").intervals).toEqual([{ start: 22, end: 23 }]);
+  });
+
+  it("weekregel 'elke zaterdag ochtend wel' voegt het ochtendblok toe", () => {
+    const p: Player = {
+      ...lars,
+      recurringRules: [{ id: "r2", weekdays: [6], block: "ochtend", status: "BESCHIKBAAR" }],
+    };
+    // 2026-08-29 = zaterdag; weekend-basis 9–23, ochtend 8–12 samengevoegd → 8–23.
+    expect(resolveAvailability(p, "2026-08-29").intervals).toEqual([{ start: 8, end: 23 }]);
   });
 });

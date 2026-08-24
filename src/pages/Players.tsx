@@ -7,10 +7,16 @@ import {
   TIMES_222,
   TIMES_223,
   type Absence,
+  type DayBlock,
   type Player,
+  type RecurringRule,
   type ScheduleType,
   type ShiftTimes,
 } from "../core";
+
+const WD_CHIPS: [string, number][] = [
+  ["ma", 1], ["di", 2], ["wo", 3], ["do", 4], ["vr", 5], ["za", 6], ["zo", 0],
+];
 import { DOW, initials, SHIFT_LABEL } from "../lib/ui";
 
 const h2str = (h: number) =>
@@ -238,6 +244,22 @@ function PlayerForm({
     });
   const removeAbs = (i: number) =>
     setDraft((d) => ({ ...d, absences: (d.absences ?? []).filter((_, j) => j !== i) }));
+  const updateRec = (i: number, pr: Partial<RecurringRule>) =>
+    setDraft((d) => {
+      const a = [...(d.recurringRules ?? [])];
+      a[i] = { ...a[i], ...pr };
+      return { ...d, recurringRules: a };
+    });
+  const removeRec = (i: number) =>
+    setDraft((d) => ({ ...d, recurringRules: (d.recurringRules ?? []).filter((_, j) => j !== i) }));
+  const toggleWd = (i: number, wd: number) =>
+    setDraft((d) => {
+      const a = [...(d.recurringRules ?? [])];
+      const r = a[i];
+      const has = r.weekdays.includes(wd);
+      a[i] = { ...r, weekdays: has ? r.weekdays.filter((x) => x !== wd) : [...r.weekdays, wd] };
+      return { ...d, recurringRules: a };
+    });
   const typeDef = TYPES.find((t) => t.key === draft.scheduleType)!;
 
   const preview = useMemo(() => {
@@ -365,6 +387,56 @@ function PlayerForm({
             ＋ periode toevoegen
           </button>
           <div className="hint">Tijdens een afwezigheidsperiode tel je niet mee in de planning.</div>
+        </div>
+
+        <div className="field">
+          <label>Vaste weekregels</label>
+          {(draft.recurringRules ?? []).map((r, i) => (
+            <div key={r.id} className="recrow">
+              <div className="wdchips">
+                {WD_CHIPS.map(([lbl, wd]) => (
+                  <button
+                    key={lbl}
+                    className={"wc" + (r.weekdays.includes(wd) ? " on" : "")}
+                    onClick={() => toggleWd(i, wd)}
+                  >
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+              <div className="recrow2">
+                <select value={r.block} onChange={(e) => updateRec(i, { block: e.target.value as DayBlock })}>
+                  <option value="ochtend">ochtend</option>
+                  <option value="middag">middag</option>
+                  <option value="avond">avond</option>
+                  <option value="hele dag">hele dag</option>
+                </select>
+                <select
+                  value={r.status}
+                  onChange={(e) => updateRec(i, { status: e.target.value as RecurringRule["status"] })}
+                >
+                  <option value="NIET_BESCHIKBAAR">niet</option>
+                  <option value="BESCHIKBAAR">wel</option>
+                </select>
+                <button className="iconbtn danger" onClick={() => removeRec(i)} aria-label="verwijder" style={{ width: 30, height: 30 }}>🗑</button>
+              </div>
+            </div>
+          ))}
+          <button
+            className="linkbtn"
+            style={{ marginLeft: 0 }}
+            onClick={() =>
+              patch({
+                recurringRules: [
+                  ...(draft.recurringRules ?? []),
+                  { id: "r" + Date.now().toString(36), weekdays: [5], block: "avond", status: "NIET_BESCHIKBAAR" },
+                ],
+              })
+            }
+          >
+            ＋ weekregel toevoegen
+          </button>
+          <div className="hint">Bijv. elke vrijdagavond niet, of elke zaterdag wel beschikbaar.</div>
         </div>
 
         <div className="field">

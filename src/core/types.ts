@@ -61,6 +61,18 @@ export interface Absence {
   note?: string;
 }
 
+/** Dagblok voor terugkerende regels. */
+export type DayBlock = "ochtend" | "middag" | "avond" | "hele dag";
+
+/** Vaste terugkerende week-regel (bv. elke vrijdagavond niet beschikbaar). */
+export interface RecurringRule {
+  id: string;
+  weekdays: number[]; // 0=zo .. 6=za
+  block: DayBlock;
+  status: "BESCHIKBAAR" | "NIET_BESCHIKBAAR";
+  note?: string;
+}
+
 export interface Player {
   id: string;
   fullName: string;
@@ -81,6 +93,8 @@ export interface Player {
   pinHash?: string;
   /** Afwezigheidsperioden (vakantie/afwezig): speler telt dan niet mee. */
   absences?: Absence[];
+  /** Vaste terugkerende week-regels. */
+  recurringRules?: RecurringRule[];
   createdAt: number;
 }
 

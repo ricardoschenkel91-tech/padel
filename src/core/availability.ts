@@ -14,10 +14,19 @@ import { playerShift, scheduleForPlayer } from "./schedules";
 import type {
   AvailabilityEntry,
   AvailabilityStatus,
+  DayBlock,
   Interval,
   Player,
   ShiftCode,
 } from "./types";
+
+/** Klok-uren per dagblok (banen open 08–22). */
+export const BLOCKS: Record<DayBlock, [number, number]> = {
+  ochtend: [8, 12],
+  middag: [12, 18],
+  avond: [18, 22],
+  "hele dag": [8, 22],
+};
 
 export interface DayAvailability {
   date: DateStr;
@@ -43,6 +52,55 @@ export function clip(iv: Interval, lo: number, hi: number): Interval | null {
 
 export function clipAll(list: Interval[], lo: number, hi: number): Interval[] {
   return list.map((iv) => clip(iv, lo, hi)).filter((x): x is Interval => x !== null);
+}
+
+/** Verwijder [s,e) uit een intervallenlijst. */
+export function subtractInterval(list: Interval[], s: number, e: number): Interval[] {
+  const out: Interval[] = [];
+  for (const iv of list) {
+    if (e <= iv.start || s >= iv.end) {
+      out.push(iv);
+      continue;
+    }
+    if (s > iv.start) out.push({ start: iv.start, end: Math.min(s, iv.end) });
+    if (e < iv.end) out.push({ start: Math.max(e, iv.start), end: iv.end });
+  }
+  return out.filter((x) => x.end - x.start > 1e-9);
+}
+
+/** Voeg een interval toe en voeg overlappende samen. */
+export function mergeInterval(list: Interval[], iv: Interval): Interval[] {
+  const all = [...list, iv].sort((a, b) => a.start - b.start);
+  const out: Interval[] = [];
+  for (const x of all) {
+    const last = out[out.length - 1];
+    if (last && x.start <= last.end + 1e-9) last.end = Math.max(last.end, x.end);
+    else out.push({ ...x });
+  }
+  return out;
+}
+
+/** Pas de vaste week-regels van een speler toe op de basis-beschikbaarheid. */
+export function applyRecurring(
+  intervals: Interval[],
+  player: Player,
+  date: DateStr,
+): { intervals: Interval[]; changed: boolean } {
+  const rules = player.recurringRules ?? [];
+  if (!rules.length) return { intervals, changed: false };
+  const wd = weekday(date);
+  let res = intervals.map((iv) => ({ ...iv }));
+  let changed = false;
+  for (const r of rules) {
+    if (!r.weekdays.includes(wd)) continue;
+    const [bs, be] = BLOCKS[r.block];
+    changed = true;
+    res =
+      r.status === "NIET_BESCHIKBAAR"
+        ? subtractInterval(res, bs, be)
+        : mergeInterval(res, { start: bs, end: be });
+  }
+  return { intervals: res, changed };
 }
 
 /** Doorsnede van twee intervallenlijsten. */
@@ -207,7 +265,13 @@ export function resolveAvailability(
   }
   // Afwezigheid (vakantie): onder handmatige invoer, boven het rooster (spec §61).
   if (isAbsent(player, date)) return blank(player, date, "Afwezig (vakantie/afwezigheid)");
-  return auto;
+  // Vaste week-regels bovenop het rooster.
+  const rec = applyRecurring(auto.intervals, player, date);
+  return {
+    ...auto,
+    intervals: rec.intervals,
+    reason: rec.changed ? `${auto.reason} · incl. vaste weekregel` : auto.reason,
+  };
 }
 
 /** Valt een datum binnen een afwezigheidsperiode van de speler? */

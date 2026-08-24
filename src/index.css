@@ -266,3 +266,11 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .timerow input[type=time]{width:auto;flex:1}
 .abrow{display:flex;align-items:center;gap:6px;margin-bottom:6px;flex-wrap:wrap}
 .abrow input[type=date]{width:auto;flex:1;min-width:120px}
+
+/* vaste weekregels */
+.recrow{border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;background:var(--surface-2)}
+.wdchips{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.wc{border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:8px;padding:5px 9px;font-size:11px;font-weight:700}
+.wc.on{background:var(--accent);color:#fff;border-color:transparent}
+.recrow2{display:flex;gap:6px;align-items:center}
+.recrow2 select{flex:1}
