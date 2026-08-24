@@ -17,12 +17,14 @@ const OPTIONS: { status: AvailabilityStatus; label: string; cls: string }[] = [
 ];
 
 export function AvailabilityPage() {
-  const { state, setAvailability, clearAvailability } = useGroup();
+  const { state, setAvailability, clearAvailability, currentPlayer, isAdmin } = useGroup();
   const players = useMemo(
     () => Object.values(state.players).filter((p) => p.active).sort((a, b) => a.createdAt - b.createdAt),
     [state.players],
   );
-  const [playerId, setPlayerId] = useState(players[0]?.id ?? "");
+  const [sel, setSel] = useState(currentPlayer?.id ?? players[0]?.id ?? "");
+  // Niet-admins kunnen alleen hun eigen beschikbaarheid beheren.
+  const playerId = isAdmin ? sel : currentPlayer?.id ?? sel;
   const [horizon, setHorizon] = useState(14);
 
   const player = state.players[playerId];
@@ -43,11 +45,15 @@ export function AvailabilityPage() {
       <div className="ctrls">
         <span className="chip">
           <label>Speler</label>
-          <select value={playerId} onChange={(e) => setPlayerId(e.target.value)}>
-            {players.map((p) => (
-              <option key={p.id} value={p.id}>{p.displayName}</option>
-            ))}
-          </select>
+          {isAdmin ? (
+            <select value={sel} onChange={(e) => setSel(e.target.value)}>
+              {players.map((p) => (
+                <option key={p.id} value={p.id}>{p.displayName}</option>
+              ))}
+            </select>
+          ) : (
+            <b style={{ color: "var(--ink)" }}>{currentPlayer?.displayName ?? "—"}</b>
+          )}
         </span>
         <span className="chip">
           <label>Periode</label>

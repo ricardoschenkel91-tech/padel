@@ -20,7 +20,8 @@ const anchorLabel: Record<ScheduleType, string> = {
 };
 
 export function Players() {
-  const { state, upsertPlayer, removePlayer, code, setCode } = useGroup();
+  const g = useGroup();
+  const { state, upsertPlayer, removePlayer, code, setCode, currentPlayer, isAdmin, setRevealPins } = g;
   const [editing, setEditing] = useState<Player | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -30,15 +31,7 @@ export function Players() {
   );
   const core = list.filter((p) => !p.reserve);
   const reserves = list.filter((p) => p.reserve);
-
-  const startAdd = () => {
-    setEditing(null);
-    setOpen(true);
-  };
-  const startEdit = (p: Player) => {
-    setEditing(p);
-    setOpen(true);
-  };
+  const protectedOn = !!state.settings.pinProtected;
 
   const share = async () => {
     const url = location.href.split("#")[0] + "#g=" + code;
@@ -50,22 +43,90 @@ export function Players() {
     }
   };
   const changeGroup = () => {
-    const g = prompt("Groepscode (iedereen met dezelfde code deelt één rooster):", code);
-    if (g && g.trim()) setCode(g);
+    const gg = prompt("Groepscode (iedereen met dezelfde code deelt één rooster):", code);
+    if (gg && gg.trim()) setCode(gg);
+  };
+  const enablePins = async () => {
+    if (!confirm("PIN-beveiliging inschakelen? Iedereen krijgt een eigen pincode; je krijgt nu de lijst om uit te delen.")) return;
+    const result = await g.enablePinProtection();
+    setRevealPins(result);
+  };
+  const resetPin = async (p: Player) => {
+    if (!confirm(`Nieuwe pincode voor ${p.fullName}?`)) return;
+    const pin = await g.resetPin(p.id);
+    setRevealPins([{ id: p.id, name: p.fullName, pin }]);
+  };
+
+  const canEdit = (p: Player) => isAdmin || p.id === currentPlayer?.id;
+
+  const onSave = async (p: Player) => {
+    const isNew = !state.players[p.id];
+    upsertPlayer(p);
+    setOpen(false);
+    if (isNew && protectedOn) {
+      const pin = await g.assignPin(p.id);
+      setRevealPins([{ id: p.id, name: p.fullName, pin }]);
+    }
   };
 
   return (
     <>
       <div className="section-title">Spelers ({core.filter((p) => p.active).length} actief)</div>
       {core.map((p) => (
-        <PersonRow key={p.id} p={p} onEdit={() => startEdit(p)} onDelete={() => removePlayer(p.id)} />
+        <PersonRow
+          key={p.id}
+          p={p}
+          me={p.id === currentPlayer?.id}
+          canEdit={canEdit(p)}
+          canDelete={isAdmin}
+          canResetPin={isAdmin && protectedOn}
+          onEdit={() => { setEditing(p); setOpen(true); }}
+          onDelete={() => removePlayer(p.id)}
+          onResetPin={() => resetPin(p)}
+        />
       ))}
-      <button className="addbtn" onClick={startAdd}>＋ Speler toevoegen</button>
+      {isAdmin && (
+        <button className="addbtn" onClick={() => { setEditing(null); setOpen(true); }}>
+          ＋ Speler toevoegen
+        </button>
+      )}
 
       <div className="section-title">Reserves ({reserves.filter((p) => p.active).length} actief)</div>
       {reserves.map((p) => (
-        <PersonRow key={p.id} p={p} onEdit={() => startEdit(p)} onDelete={() => removePlayer(p.id)} />
+        <PersonRow
+          key={p.id}
+          p={p}
+          me={p.id === currentPlayer?.id}
+          canEdit={canEdit(p)}
+          canDelete={isAdmin}
+          canResetPin={isAdmin && protectedOn}
+          onEdit={() => { setEditing(p); setOpen(true); }}
+          onDelete={() => removePlayer(p.id)}
+          onResetPin={() => resetPin(p)}
+        />
       ))}
+
+      {/* PIN-beveiliging (alleen beheerder) */}
+      {isAdmin && (
+        <>
+          <div className="section-title">Beveiliging</div>
+          {protectedOn ? (
+            <p className="hint" style={{ margin: "0 2px" }}>
+              🔒 PIN-beveiliging staat <b>aan</b>. Iedereen logt in met een eigen pincode en kan alleen zijn
+              eigen gegevens aanpassen. Gebruik het sleutel-icoon bij een speler om een nieuwe pincode te maken.
+            </p>
+          ) : (
+            <>
+              <button className="btn primary" style={{ maxWidth: 320 }} onClick={enablePins}>
+                🔒 PIN-beveiliging inschakelen
+              </button>
+              <p className="hint" style={{ margin: "8px 2px 0" }}>
+                Iedere speler krijgt een eigen pincode om in te loggen. Werkt gedeeld pas echt met cloud-sync aan.
+              </p>
+            </>
+          )}
+        </>
+      )}
 
       <div className="section-title">Groep</div>
       <div className="settings-line" style={{ borderTop: "none" }}>
@@ -77,62 +138,63 @@ export function Players() {
         <span className="k">Deel de app</span>
         <button className="linkbtn" onClick={share}>link kopiëren</button>
       </div>
-      <p className="hint" style={{ marginTop: 12 }}>
-        Iedereen met dezelfde groepscode ziet hetzelfde rooster. Reserves tellen niet mee tot je ze activeert.
-      </p>
 
       {open && (
         <PlayerForm
           existing={editing}
           usedColors={list.map((p) => p.color)}
+          lockReserve={!isAdmin}
           onClose={() => setOpen(false)}
-          onSave={(p) => {
-            upsertPlayer(p);
-            setOpen(false);
-          }}
+          onSave={onSave}
         />
       )}
     </>
   );
 }
 
-function PersonRow({ p, onEdit, onDelete }: { p: Player; onEdit: () => void; onDelete: () => void }) {
+function PersonRow({
+  p, me, canEdit, canDelete, canResetPin, onEdit, onDelete, onResetPin,
+}: {
+  p: Player; me: boolean; canEdit: boolean; canDelete: boolean; canResetPin: boolean;
+  onEdit: () => void; onDelete: () => void; onResetPin: () => void;
+}) {
   return (
     <div className={"person" + (p.active ? "" : " inactive")}>
       <span className="av" style={{ background: p.color, width: 40, height: 40, fontSize: 15, borderWidth: 0, marginLeft: 0 }}>
         {initials(p.displayName)}
       </span>
       <div className="meta">
-        <b>{p.fullName}</b>
+        <b>{p.fullName}{me ? " (jij)" : ""}</b>
         <small>
           {TYPES.find((t) => t.key === p.scheduleType)?.label ?? p.scheduleType}
           {!p.active ? " · inactief" : ""}
         </small>
       </div>
       <div className="acts">
-        <button className="iconbtn" onClick={onEdit} aria-label="bewerk">✎</button>
-        <button
-          className="iconbtn danger"
-          aria-label="verwijder"
-          onClick={() => {
-            if (confirm(`"${p.fullName}" verwijderen?`)) onDelete();
-          }}
-        >
-          🗑
-        </button>
+        {canResetPin && (
+          <button className="iconbtn" onClick={onResetPin} aria-label="nieuwe pincode" title="Nieuwe pincode">🔑</button>
+        )}
+        {canEdit && (
+          <button className="iconbtn" onClick={onEdit} aria-label="bewerk">✎</button>
+        )}
+        {canDelete && (
+          <button
+            className="iconbtn danger"
+            aria-label="verwijder"
+            onClick={() => { if (confirm(`"${p.fullName}" verwijderen?`)) onDelete(); }}
+          >🗑</button>
+        )}
       </div>
     </div>
   );
 }
 
 function PlayerForm({
-  existing,
-  usedColors,
-  onClose,
-  onSave,
+  existing, usedColors, lockReserve, onClose, onSave,
 }: {
   existing: Player | null;
   usedColors: string[];
+  lockReserve: boolean;
   onClose: () => void;
   onSave: (p: Player) => void;
 }) {
@@ -164,11 +226,7 @@ function PlayerForm({
   const save = () => {
     const fullName = draft.fullName.trim();
     if (!fullName) return;
-    onSave({
-      ...draft,
-      fullName,
-      displayName: draft.displayName.trim() || fullName.split(" ")[0],
-    });
+    onSave({ ...draft, fullName, displayName: draft.displayName.trim() || fullName.split(" ")[0] });
   };
 
   return (
@@ -179,34 +237,18 @@ function PlayerForm({
 
         <div className="field">
           <label>Volledige naam</label>
-          <input
-            type="text"
-            value={draft.fullName}
-            placeholder="bv. Ricardo Schenkel"
-            onChange={(e) => patch({ fullName: e.target.value })}
-          />
+          <input type="text" value={draft.fullName} placeholder="bv. Ricardo Schenkel" onChange={(e) => patch({ fullName: e.target.value })} />
         </div>
         <div className="field">
           <label>Weergavenaam</label>
-          <input
-            type="text"
-            value={draft.displayName}
-            placeholder="bv. Ricardo"
-            onChange={(e) => patch({ displayName: e.target.value })}
-          />
+          <input type="text" value={draft.displayName} placeholder="bv. Ricardo" onChange={(e) => patch({ displayName: e.target.value })} />
         </div>
 
         <div className="field">
           <label>Kleur</label>
           <div className="swatchrow">
             {COLORS.map((c) => (
-              <button
-                key={c}
-                className="swatch"
-                style={{ background: c }}
-                aria-pressed={draft.color === c}
-                onClick={() => patch({ color: c })}
-              />
+              <button key={c} className="swatch" style={{ background: c }} aria-pressed={draft.color === c} onClick={() => patch({ color: c })} />
             ))}
           </div>
         </div>
@@ -216,8 +258,7 @@ function PlayerForm({
           <div className="typegrid">
             {TYPES.map((t) => (
               <button key={t.key} aria-pressed={draft.scheduleType === t.key} onClick={() => patch({ scheduleType: t.key })}>
-                {t.label}
-                <small>{t.sub}</small>
+                {t.label}<small>{t.sub}</small>
               </button>
             ))}
           </div>
@@ -226,33 +267,21 @@ function PlayerForm({
         {typeDef.cycle && (
           <div className="field">
             <label>{anchorLabel[draft.scheduleType]}</label>
-            <input
-              type="date"
-              value={draft.referenceDate ?? todayStr()}
-              onChange={(e) => patch({ referenceDate: e.target.value })}
-            />
+            <input type="date" value={draft.referenceDate ?? todayStr()} onChange={(e) => patch({ referenceDate: e.target.value })} />
             <div className="hint">Vanaf deze datum rekent de app je hele rooster automatisch door.</div>
           </div>
         )}
 
         <div className="switchrow">
-          <input
-            type="checkbox"
-            id="active"
-            checked={draft.active}
-            onChange={(e) => patch({ active: e.target.checked })}
-          />
+          <input type="checkbox" id="active" checked={draft.active} onChange={(e) => patch({ active: e.target.checked })} />
           <label htmlFor="active">Actief (telt mee in de planning)</label>
         </div>
-        <div className="switchrow">
-          <input
-            type="checkbox"
-            id="reserve"
-            checked={draft.reserve}
-            onChange={(e) => patch({ reserve: e.target.checked })}
-          />
-          <label htmlFor="reserve">Reservespeler</label>
-        </div>
+        {!lockReserve && (
+          <div className="switchrow">
+            <input type="checkbox" id="reserve" checked={draft.reserve} onChange={(e) => patch({ reserve: e.target.checked })} />
+            <label htmlFor="reserve">Reservespeler</label>
+          </div>
+        )}
 
         <div className="field">
           <label>Voorbeeld — komende 14 dagen</label>
@@ -263,9 +292,7 @@ function PlayerForm({
                   <div className="pv-s" style={{ background: `var(--sh-${sh}-bg)`, color: `var(--sh-${sh})` }} title={SHIFT_LABEL[sh]}>
                     {sh === "V" ? "·" : sh[0]}
                   </div>
-                  {DOW[new Date(date + "T00:00:00Z").getUTCDay()]}
-                  <br />
-                  {+date.split("-")[2]}
+                  {DOW[new Date(date + "T00:00:00Z").getUTCDay()]}<br />{+date.split("-")[2]}
                 </div>
               ))}
             </div>

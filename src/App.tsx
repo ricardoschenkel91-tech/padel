@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useGroup } from "./store/GroupProvider";
+import { PinLock } from "./components/PinLock";
+import { PinModal } from "./components/PinModal";
 import { Dashboard } from "./pages/Dashboard";
 import { AvailabilityPage } from "./pages/Availability";
 import { Players } from "./pages/Players";
 import { Roster } from "./pages/Roster";
+import { initials } from "./lib/ui";
 
 type Tab = "kansen" | "beschikbaar" | "rooster" | "spelers";
 
 export function App() {
-  const { state, sync, code, setCode } = useGroup();
+  const { state, sync, code, setCode, currentPlayer, logout, revealPins, setRevealPins } = useGroup();
   const [tab, setTab] = useState<Tab>("kansen");
 
   // Groepscode uit de deel-link (#g=code) overnemen bij openen.
@@ -17,6 +20,17 @@ export function App() {
     if (m && m[1].toLowerCase() !== code) setCode(m[1]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Pincode-onthulling staat altijd bovenop (ook boven het slot).
+  const pinReveal = revealPins && <PinModal pins={revealPins} onClose={() => setRevealPins(null)} />;
+
+  if (state.settings.pinProtected && !currentPlayer)
+    return (
+      <>
+        <PinLock />
+        {pinReveal}
+      </>
+    );
 
   const playerCount = Object.values(state.players).filter((p) => p.active && !p.reserve).length;
 
@@ -29,17 +43,32 @@ export function App() {
             <h1>PadelMatch</h1>
             <div className="tag">Wanneer kunnen we met z'n vieren?</div>
           </div>
-          <span className={"sync " + (sync === "cloud" ? "cloud" : "")}>
-            <span className="dot" />
-            {sync === "cloud" ? "Live sync" : "Lokaal"}
-          </span>
+          {currentPlayer ? (
+            <button
+              className="profile"
+              onClick={() => {
+                if (confirm(`Uitloggen als ${currentPlayer.displayName}?`)) logout();
+              }}
+              title="Uitloggen"
+            >
+              <span className="av" style={{ background: currentPlayer.color }}>
+                {initials(currentPlayer.displayName)}
+              </span>
+              <span className="pname">{currentPlayer.displayName}</span>
+            </button>
+          ) : (
+            <span className={"sync " + (sync === "cloud" ? "cloud" : "")}>
+              <span className="dot" />
+              {sync === "cloud" ? "Live sync" : "Lokaal"}
+            </span>
+          )}
         </div>
         <div className="tabs" role="tablist">
           <button role="tab" aria-selected={tab === "kansen"} onClick={() => setTab("kansen")}>
             🎾 Kansen
           </button>
           <button role="tab" aria-selected={tab === "beschikbaar"} onClick={() => setTab("beschikbaar")}>
-            🗓 Mijn beschikbaarheid
+            🗓 Beschikbaarheid
           </button>
           <button role="tab" aria-selected={tab === "rooster"} onClick={() => setTab("rooster")}>
             📅 Rooster
@@ -55,6 +84,7 @@ export function App() {
         {tab === "rooster" && <Roster />}
         {tab === "spelers" && <Players />}
       </main>
+      {pinReveal}
     </div>
   );
 }

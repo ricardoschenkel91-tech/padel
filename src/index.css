@@ -212,3 +212,29 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .settings-line{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
 .settings-line .k{font-weight:700;font-size:14px}
 .linkbtn{background:none;border:0;color:var(--accent);font-weight:750;font-size:13px;padding:0;margin-left:auto}
+
+/* profiel-knop in header */
+.profile{margin-left:auto;display:flex;align-items:center;gap:8px;background:var(--surface);
+  border:1px solid var(--line);border-radius:22px;padding:4px 12px 4px 4px;box-shadow:var(--shadow)}
+.profile .av{width:28px;height:28px;font-size:11px;border-width:0;margin-left:0}
+.profile .pname{font-size:12.5px;font-weight:750;color:var(--ink)}
+
+/* PIN-slot */
+.lock{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:var(--bg)}
+.lock-inner{width:100%;max-width:320px;text-align:center}
+.lock .logo{width:56px;height:56px;border-radius:16px;margin:0 auto 14px}
+.lock h1{font-size:26px;margin-bottom:4px}
+.lock .muted{font-size:13px;margin-bottom:22px}
+.pindots{display:flex;gap:12px;justify-content:center;margin:8px 0 4px}
+.pindot{width:14px;height:14px;border-radius:50%;border:2px solid var(--line-2);background:transparent}
+.pindot.on{background:var(--accent);border-color:var(--accent)}
+.pindot.opt{opacity:.5}
+.lock-err{color:var(--red);font-size:13px;font-weight:700;margin-top:12px}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:24px}
+.keypad button{aspect-ratio:1;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  border-radius:16px;font-size:24px;font-weight:700;font-family:var(--font-display);box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:center}
+.keypad button:active{background:var(--surface-2)}
+.keypad .k-ghost{border:0;background:transparent;box-shadow:none;font-size:20px;color:var(--ink-3)}
+.keypad .k-ok{background:var(--accent);color:#fff;border-color:transparent}
+.keypad .k-ok:disabled{opacity:.4}

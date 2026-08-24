@@ -70,6 +70,8 @@ export interface Player {
   shiftTimes?: ShiftTimes;
   color: string;
   notes?: string;
+  /** SHA-256 hash van de persoonlijke pincode (nooit de pincode zelf opslaan). */
+  pinHash?: string;
   createdAt: number;
 }
 
@@ -133,6 +135,8 @@ export interface GroupSettings {
   padelEnd: number;
   lastBookingStart: number; // spec: 22:00
   durationsMin: number[]; // toegestane reserveringsduren
+  /** PIN-beveiliging: iedereen logt in met een persoonlijke pincode. */
+  pinProtected?: boolean;
 }
 
 /** Gedeelde staat van één groep — dit is wat gesynct/opgeslagen wordt. */
