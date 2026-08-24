@@ -7,7 +7,7 @@ import {
   todayStr,
   type PlayableSlot,
 } from "../core";
-import { DOW, fmtDuration, fmtWindow, initials, niceDate, SHIFT_LABEL } from "../lib/ui";
+import { DOW, fmtDuration, fmtWindow, initials, niceDate, PERIOD_OPTIONS, SHIFT_LABEL } from "../lib/ui";
 
 function level(n: number): "green" | "yellow" | "orange" {
   return n >= 4 ? "green" : n === 3 ? "yellow" : "orange";
@@ -57,9 +57,9 @@ export function Dashboard() {
         <span className="chip">
           <label>Periode</label>
           <select value={horizon} onChange={(e) => setHorizon(+e.target.value)}>
-            <option value={7}>7 dagen</option>
-            <option value={14}>2 weken</option>
-            <option value={28}>4 weken</option>
+            {PERIOD_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </span>
       </div>

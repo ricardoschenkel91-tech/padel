@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useGroup } from "../store/GroupProvider";
 import { addDays, playerShift, todayStr } from "../core";
-import { DOW, initials } from "../lib/ui";
+import { DOW, initials, PERIOD_OPTIONS } from "../lib/ui";
 
 export function Roster() {
   const { state } = useGroup();
@@ -24,9 +24,9 @@ export function Roster() {
         <span className="chip">
           <label>Periode</label>
           <select value={horizon} onChange={(e) => setHorizon(+e.target.value)}>
-            <option value={7}>7 dagen</option>
-            <option value={14}>2 weken</option>
-            <option value={28}>4 weken</option>
+            {PERIOD_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </span>
       </div>

@@ -7,7 +7,7 @@ import {
   type AvailabilityStatus,
   type ShiftCode,
 } from "../core";
-import { DOW, fmtWindow, niceDate, SHIFT_LABEL } from "../lib/ui";
+import { DOW, fmtWindow, niceDate, PERIOD_OPTIONS, SHIFT_LABEL } from "../lib/ui";
 
 const OPTIONS: { status: AvailabilityStatus; label: string; cls: string }[] = [
   { status: "AUTO", label: "Auto", cls: "b-auto" },
@@ -52,9 +52,9 @@ export function AvailabilityPage() {
         <span className="chip">
           <label>Periode</label>
           <select value={horizon} onChange={(e) => setHorizon(+e.target.value)}>
-            <option value={7}>7 dagen</option>
-            <option value={14}>2 weken</option>
-            <option value={28}>4 weken</option>
+            {PERIOD_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
           </select>
         </span>
       </div>
