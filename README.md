@@ -1,76 +1,71 @@
 # 🎾 PadelMatch
 
-Een kleine web-app voor een vriendengroep die in ploegendienst werkt: iedereen vult
-zijn werkrooster in, en de app laat in één oogopslag zien **wanneer minimaal 4 vrienden
-tegelijk vrij zijn om te padellen**.
+Web-app voor een vriendengroep die in ploegendienst werkt: iedereen beheert zijn
+beschikbaarheid (grotendeels automatisch uit het werkrooster) en de app laat in één
+oogopslag zien **wanneer minimaal 4 vrienden tegelijk kunnen padellen**.
 
-- **Geen server, geen Vercel, gratis** — draait volledig als statische site op GitHub Pages.
-- **Werkt op elke telefoon** via de browser (voelt als een app).
-- **Optionele live-sync** tussen alle telefoons via Firebase (gratis Spark-plan).
-- Zonder Firebase werkt de app ook — dan blijft je invoer op dat ene apparaat.
+- **Gratis, geen server, geen Vercel** — statische app op GitHub Pages.
+- **Geen login** — je opent de app en kiest een groepscode.
+- **Optionele live-sync** tussen telefoons via Firebase (gratis).
+- Roosters worden als **regels** opgeslagen en on-demand berekend (geen records per dag).
+
+Architectuur en beslissingen: zie [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Roosterlogica
 
-| Dienst | Tijd | | |
-|---|---|---|---|
-| **O** Ochtend | 06:00–14:00 | **N** Nacht | 22:00–06:00 |
-| **M** Middag | 14:00–22:00 | **D** Dagdienst | 09:00–18:00 |
+| 222 (10 dagen) | 223 (35 dagen) |
+|---|---|
+| OD 06–14 · MD 14–22 · ND 22–06 | OD 07–15 · MD 15–23 · ND 23–07 |
+| `OO MM NN VVVV` | Fase B `OOO MM NN VVVVV` → C `OO MMM NN VVVVV` → A `OO MM NNN VVVV` |
+| ref = eerste ochtenddienst | ref = eerste dag van een 3×OD-blok |
 
-- Na een **nachtdienst** telt de ochtend erna als bezet (uitslapen tot 14:00).
-- Roostertypes: **Dagdienst** (ma–vr), **5-ploegen** (2×O, 2×M, 2×N, 4× vrij),
-  **3-ploegen**, **2-ploegen** en **Aangepast** (eigen cyclus).
-- Je kiest je type + je **eerste werkdag**; de app rekent alle volgende dagen automatisch door.
+Plus **Dagdienst** (ma–vr 18–23, weekend 09–23) en **Aangepast**. Na een nachtdienst
+geldt de ochtend erna als bezet (uitslapen). Handmatige invoer wint altijd van het rooster.
 
-## Live zetten op GitHub Pages (eenmalig, ~1 min)
+## Ontwikkelen
 
-1. Push deze repo naar GitHub (main branch).
-2. Repo → **Settings → Pages**.
-3. Bij *Source*: **Deploy from a branch** → branch **main**, map **/ (root)** → **Save**.
-4. Na ~1 minuut staat de app op `https://<jouw-username>.github.io/<repo-naam>/`.
-   Deel die link met je vrienden.
-
-## Cloud-sync aanzetten (Firebase, gratis — ~5 min)
-
-Zonder deze stap werkt de app al, maar dan lokaal per telefoon. Voor gedeelde roosters:
-
-1. Ga naar <https://console.firebase.google.com> → **Add project** (Google-account, gratis).
-2. Sla Google Analytics gerust over.
-3. Links in het menu: **Build → Realtime Database → Create Database**
-   - Kies een locatie (bv. *europe-west1*).
-   - Start in **test mode** (voor een vriendengroep prima; wil je het dichttimmeren, zie onder).
-4. Klik op het tandwiel → **Project settings** → onder *Your apps* op **`</>` (Web)** → geef 'm een naam → **Register app**.
-5. Je krijgt een `firebaseConfig`-blokje. Kopieer daaruit `apiKey`, `databaseURL` en `projectId`.
-6. Open **`index.html`**, zoek bovenin het script naar `FIREBASE_CONFIG` en vul je waarden in:
-
-   ```js
-   const FIREBASE_CONFIG = {
-     apiKey: "AIza....",
-     databaseURL: "https://jouw-project-default-rtdb.europe-west1.firebasedatabase.app",
-     projectId: "jouw-project-id"
-   };
-   ```
-
-7. Commit + push. GitHub Pages werkt zichzelf bij; de app toont dan **“Live sync”** rechtsboven.
-
-> De `apiKey` mag gewoon publiek in de code staan — dat is bij Firebase by design.
-
-### (Optioneel) Database-regels wat strakker
-
-Test-mode staat lezen/schrijven open voor iedereen. Voor een privé vriendengroep kun je in
-**Realtime Database → Rules** dit gebruiken (alles onder één gedeelde groep, geen login nodig):
-
-```json
-{ "rules": { "groups": { ".read": true, ".write": true } } }
+```bash
+npm install
+npm run dev        # lokale dev-server
+npm test           # 60 vitest-tests (engine)
+npm run typecheck
+npm run build      # productie-build naar dist/
 ```
 
-Wil je echt afschermen, dan is anonymous auth de volgende stap — vraag gerust.
+## Live zetten op GitHub Pages (eenmalig)
+
+De repo bevat een workflow (`.github/workflows/deploy.yml`) die bij elke push naar
+`main` test, bouwt en publiceert.
+
+1. Repo → **Settings → Pages** → *Source*: **GitHub Actions**.
+2. Push naar `main` (of draai de workflow handmatig). Na ~1 min staat de app op
+   `https://ricardoschenkel91-tech.github.io/padel/`.
+
+> De Vite-`base` staat op `/padel/`. Heet de repo anders, pas dan `base` in
+> `vite.config.ts` aan.
+
+## Cloud-sync aanzetten (Firebase, gratis)
+
+Zonder deze stap werkt de app lokaal (per telefoon). Voor gedeelde roosters:
+
+1. <https://console.firebase.google.com> → **Add project** (gratis).
+2. **Build → Firestore Database → Create database** → start in **test mode**,
+   locatie *europe-west*.
+3. Tandwiel → **Project settings** → onder *Your apps* op **`</>` (Web)** →
+   registreer → kopieer `apiKey`, `authDomain`, `projectId`, `appId`.
+4. Plak die in **`src/store/firebaseConfig.ts`** (de `PLAK_HIER`-waarden vervangen).
+5. Commit + push. De app toont dan **“Live sync”** rechtsboven.
+
+> De `apiKey` mag publiek in de code staan (Firebase by design). Voor een privé
+> vriendengroep volstaat test-mode; strengere regels kunnen later.
 
 ## Groepen
 
-Iedereen met dezelfde **groepscode** (in de app onder *Spelers*) deelt hetzelfde rooster.
-Standaard is dat `padel`. Meerdere vriendengroepen kunnen zo dezelfde deploy gebruiken zonder
-elkaar te storen. De deel-link bevat de groepscode (`...#g=padel`).
+Iedereen met dezelfde **groepscode** (onder *Spelers*) deelt hetzelfde rooster.
+De deel-link bevat de code (`…/padel/#g=schenkel`).
 
-## Lokaal bekijken
+## Status
 
-Gewoon `index.html` in je browser openen. Geen build-stap, geen dependencies.
+- ✅ **Fase 1** — ploegendienst-engine, beschikbaarheid, gaten-zoeker, combinatieregels, tests.
+- ✅ **Fase 2** — React-app: Kansen-dashboard, persoonlijke beschikbaarheid, spelersbeheer, rooster, Firebase-seam, Pages-deploy.
+- ⏭ **Fase 3+** — voorstellen, reserveringen, locaties, ranking, teammaker, notificaties, export, feestdagen/vakanties.
