@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useGroup } from "../store/GroupProvider";
 import {
   addDays,
+  DEFAULT_WORKWEEK,
   playerShift,
   todayStr,
   TIMES_222,
@@ -235,6 +236,7 @@ function PlayerForm({
       createdAt: Date.now(),
     },
   );
+  const gg = useGroup();
   const patch = (p: Partial<Player>) => setDraft((d) => ({ ...d, ...p }));
   const updateAbs = (i: number, pa: Partial<Absence>) =>
     setDraft((d) => {
@@ -316,6 +318,34 @@ function PlayerForm({
             <label>{anchorLabel[draft.scheduleType]}</label>
             <input type="date" value={draft.referenceDate ?? todayStr()} onChange={(e) => patch({ referenceDate: e.target.value })} />
             <div className="hint">Vanaf deze datum rekent de app je hele rooster automatisch door.</div>
+          </div>
+        )}
+
+        {draft.scheduleType === "dagdienst" && (
+          <div className="field">
+            <label>Werkweek</label>
+            {WD_CHIPS.map(([lbl, wd]) => {
+              const ww = draft.workWeek ?? DEFAULT_WORKWEEK;
+              const job = ww[wd];
+              const setJob = (v: [number, number] | null) => patch({ workWeek: { ...ww, [wd]: v } });
+              return (
+                <div key={lbl} className="workrow">
+                  <button className={"wc" + (job ? " on" : "")} style={{ width: 46 }} onClick={() => setJob(job ? null : [9, 18])}>
+                    {lbl}
+                  </button>
+                  {job ? (
+                    <>
+                      <input type="time" value={h2str(job[0])} onChange={(e) => setJob([str2h(e.target.value), job[1]])} />
+                      <span>–</span>
+                      <input type="time" value={h2str(job[1])} onChange={(e) => setJob([job[0], str2h(e.target.value)])} />
+                    </>
+                  ) : (
+                    <span className="muted" style={{ fontSize: 12, fontWeight: 600 }}>vrij</span>
+                  )}
+                </div>
+              );
+            })}
+            <div className="hint">Tik een dag aan/uit (werk/vrij) en zet de werktijden. Buiten werktijd ben je automatisch beschikbaar.</div>
           </div>
         )}
 
@@ -440,6 +470,24 @@ function PlayerForm({
         </div>
 
         <div className="field">
+          <label>Niet automatisch samen met</label>
+          {Object.values(gg.state.restrictions)
+            .filter((r) => r.playerA === draft.id || r.playerB === draft.id)
+            .map((r) => {
+              const otherId = r.playerA === draft.id ? r.playerB : r.playerA;
+              return (
+                <div key={r.id} className="abrow">
+                  <span style={{ fontWeight: 700, fontSize: 13 }}>{gg.state.players[otherId]?.displayName ?? otherId}</span>
+                  <span className="muted" style={{ fontSize: 11, flex: 1 }}>{r.reason || "geen reden"}</span>
+                  <button className="iconbtn danger" onClick={() => gg.removeRestriction(r.id)} aria-label="verwijder" style={{ width: 30, height: 30 }}>🗑</button>
+                </div>
+              );
+            })}
+          <ComboAdd draftId={draft.id} />
+          <div className="hint">De app plant jullie niet automatisch samen in een viertal (bv. kinderoppas). Beschikbaarheid blijft gewoon bestaan. Wordt direct toegepast.</div>
+        </div>
+
+        <div className="field">
           <label>Voorbeeld — komende 14 dagen</label>
           <div className="preview">
             <div className="pv-row">
@@ -460,6 +508,45 @@ function PlayerForm({
           <button className="btn ghost" onClick={onClose}>Annuleer</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ComboAdd({ draftId }: { draftId: string }) {
+  const g = useGroup();
+  const others = Object.values(g.state.players).filter((p) => p.id !== draftId && !p.reserve);
+  const [other, setOther] = useState(others[0]?.id ?? "");
+  const [reason, setReason] = useState("");
+  if (!others.length) return null;
+  const add = () => {
+    if (!other) return;
+    const id = "cr-" + [draftId, other].sort().join("-");
+    g.upsertRestriction({
+      id,
+      groupId: g.state.settings.id,
+      playerA: draftId,
+      playerB: other,
+      active: true,
+      type: "NIET_AUTO_SAMEN",
+      reason: reason.trim() || undefined,
+    });
+    setReason("");
+  };
+  return (
+    <div className="abrow" style={{ marginTop: 6 }}>
+      <select value={other} onChange={(e) => setOther(e.target.value)} style={{ flex: 1 }}>
+        {others.map((p) => (
+          <option key={p.id} value={p.id}>{p.displayName}</option>
+        ))}
+      </select>
+      <input
+        type="text"
+        placeholder="reden"
+        value={reason}
+        onChange={(e) => setReason(e.target.value)}
+        style={{ flex: 1, minWidth: 90 }}
+      />
+      <button className="linkbtn" style={{ marginLeft: 0 }} onClick={add}>toevoegen</button>
     </div>
   );
 }

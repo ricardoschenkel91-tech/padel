@@ -95,6 +95,8 @@ export interface Player {
   absences?: Absence[];
   /** Vaste terugkerende week-regels. */
   recurringRules?: RecurringRule[];
+  /** Dagdienst: werkuren per weekdag (0=zo..6=za); null = die dag vrij. */
+  workWeek?: Record<number, [number, number] | null>;
   createdAt: number;
 }
 

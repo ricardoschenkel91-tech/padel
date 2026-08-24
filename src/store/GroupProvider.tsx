@@ -17,6 +17,7 @@ import {
 import {
   seedGroupState,
   type AvailabilityEntry,
+  type CombinationRestriction,
   type GroupSettings,
   type GroupState,
   type Player,
@@ -42,6 +43,8 @@ interface GroupContextValue {
   setAvailability: (entry: AvailabilityEntry) => void;
   clearAvailability: (playerId: string, date: string) => void;
   updateSettings: (patch: Partial<GroupSettings>) => void;
+  upsertRestriction: (r: CombinationRestriction) => void;
+  removeRestriction: (id: string) => void;
   login: (pin: string) => Promise<boolean>;
   logout: () => void;
   assignPin: (playerId: string) => Promise<string>;
@@ -230,6 +233,14 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         }),
       updateSettings: (patch) =>
         update((s) => ({ ...s, settings: { ...s.settings, ...patch } })),
+      upsertRestriction: (r) =>
+        update((s) => ({ ...s, restrictions: { ...s.restrictions, [r.id]: r } })),
+      removeRestriction: (id) =>
+        update((s) => {
+          const restrictions = { ...s.restrictions };
+          delete restrictions[id];
+          return { ...s, restrictions };
+        }),
       revealPins,
       setRevealPins,
     }),

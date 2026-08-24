@@ -8,6 +8,7 @@ import { positiveModulo, toDays } from "./dates";
 import type { DateStr } from "./dates";
 import type {
   CycleSchedule,
+  Interval,
   Player,
   ScheduleDef,
   ShiftCode,
@@ -54,6 +55,28 @@ export const PATTERN_223: ShiftCode[] = [
 export const TIMES_222: ShiftTimes = { OD: [6, 14], MD: [14, 22], ND: [22, 6] };
 export const TIMES_223: ShiftTimes = { OD: [7, 15], MD: [15, 23], ND: [23, 7] };
 
+/** Standaard werkweek voor het dagdienst-formulier: ma–vr 09–18, weekend vrij. */
+export const DEFAULT_WORKWEEK: Record<number, [number, number] | null> = {
+  1: [9, 18], 2: [9, 18], 3: [9, 18], 4: [9, 18], 5: [9, 18], 6: null, 0: null,
+};
+
+/** Bouw beschikbaarheidsvensters uit werkuren per weekdag (vrij vóór/na werk, 08–22). */
+export function buildDagWindows(work: Record<number, [number, number] | null>): Record<number, Interval[]> {
+  const w: Record<number, Interval[]> = {};
+  for (let d = 0; d < 7; d++) {
+    const job = work[d];
+    if (!job) {
+      w[d] = [{ start: 8, end: 22 }];
+    } else {
+      const wins: Interval[] = [];
+      if (job[0] > 8) wins.push({ start: 8, end: job[0] });
+      if (job[1] < 22) wins.push({ start: job[1], end: 22 });
+      w[d] = wins;
+    }
+  }
+  return w;
+}
+
 /** Standaard dagdienst (spec §18): ma–vr 18–23, za/zo 09–23. */
 export const WEEKLY_DAGDIENST: WeeklySchedule = {
   kind: "weekly",
@@ -80,7 +103,9 @@ export function scheduleForPlayer(player: Player): ScheduleDef {
     case "223":
       return { kind: "cycle", cycle: PATTERN_223, times: player.shiftTimes ?? TIMES_223 };
     case "dagdienst":
-      return WEEKLY_DAGDIENST;
+      return player.workWeek
+        ? { kind: "weekly", windows: buildDagWindows(player.workWeek) }
+        : WEEKLY_DAGDIENST;
     case "aangepast":
       // Aangepaste cyclus wordt (later) op de speler opgeslagen; val terug op 222.
       return { kind: "cycle", cycle: PATTERN_222, times: player.shiftTimes ?? TIMES_222 };

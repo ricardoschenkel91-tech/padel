@@ -274,3 +274,7 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .wc.on{background:var(--accent);color:#fff;border-color:transparent}
 .recrow2{display:flex;gap:6px;align-items:center}
 .recrow2 select{flex:1}
+
+/* dagdienst werkweek-rij */
+.workrow{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.workrow input[type=time]{width:auto;flex:1}
