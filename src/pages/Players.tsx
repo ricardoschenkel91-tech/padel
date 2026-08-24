@@ -1,7 +1,24 @@
 import { useMemo, useState } from "react";
 import { useGroup } from "../store/GroupProvider";
-import { addDays, playerShift, todayStr, type Player, type ScheduleType } from "../core";
+import {
+  addDays,
+  playerShift,
+  todayStr,
+  TIMES_222,
+  TIMES_223,
+  type Absence,
+  type Player,
+  type ScheduleType,
+  type ShiftTimes,
+} from "../core";
 import { DOW, initials, SHIFT_LABEL } from "../lib/ui";
+
+const h2str = (h: number) =>
+  `${String(Math.floor(h)).padStart(2, "0")}:${String(Math.round((h - Math.floor(h)) * 60)).padStart(2, "0")}`;
+const str2h = (s: string) => {
+  const [H, M] = s.split(":").map(Number);
+  return H + (M || 0) / 60;
+};
 
 const COLORS = ["#0FB3A6", "#f2a63c", "#7a6cf0", "#e2683f", "#3f7fe0", "#12a98a", "#d24c8e", "#5b8c1e"];
 
@@ -213,6 +230,14 @@ function PlayerForm({
     },
   );
   const patch = (p: Partial<Player>) => setDraft((d) => ({ ...d, ...p }));
+  const updateAbs = (i: number, pa: Partial<Absence>) =>
+    setDraft((d) => {
+      const abs = [...(d.absences ?? [])];
+      abs[i] = { ...abs[i], ...pa };
+      return { ...d, absences: abs };
+    });
+  const removeAbs = (i: number) =>
+    setDraft((d) => ({ ...d, absences: (d.absences ?? []).filter((_, j) => j !== i) }));
   const typeDef = TYPES.find((t) => t.key === draft.scheduleType)!;
 
   const preview = useMemo(() => {
@@ -272,6 +297,32 @@ function PlayerForm({
           </div>
         )}
 
+        {(draft.scheduleType === "222" || draft.scheduleType === "223") && (
+          <div className="field">
+            <label>Diensttijden</label>
+            {(() => {
+              const times = draft.shiftTimes ?? (draft.scheduleType === "223" ? TIMES_223 : TIMES_222);
+              const setT = (k: keyof ShiftTimes, idx: 0 | 1, v: string) =>
+                patch({
+                  shiftTimes: {
+                    ...times,
+                    [k]: idx === 0 ? [str2h(v), times[k][1]] : [times[k][0], str2h(v)],
+                  },
+                });
+              const rows: [keyof ShiftTimes, string][] = [["OD", "Ochtend"], ["MD", "Middag"], ["ND", "Nacht"]];
+              return rows.map(([k, label]) => (
+                <div key={k} className="timerow">
+                  <span className="tl">{label}</span>
+                  <input type="time" value={h2str(times[k][0])} onChange={(e) => setT(k, 0, e.target.value)} />
+                  <span>–</span>
+                  <input type="time" value={h2str(times[k][1])} onChange={(e) => setT(k, 1, e.target.value)} />
+                </div>
+              ));
+            })()}
+            <div className="hint">Standaard ingevuld; pas aan als jouw diensttijden afwijken.</div>
+          </div>
+        )}
+
         <div className="switchrow">
           <input type="checkbox" id="active" checked={draft.active} onChange={(e) => patch({ active: e.target.checked })} />
           <label htmlFor="active">Actief (telt mee in de planning)</label>
@@ -282,6 +333,39 @@ function PlayerForm({
             <label htmlFor="reserve">Reservespeler</label>
           </div>
         )}
+
+        <div className="field">
+          <label>Afwezigheid (vakantie / weg)</label>
+          {(draft.absences ?? []).map((a, i) => (
+            <div key={i} className="abrow">
+              <input type="date" value={a.from} onChange={(e) => updateAbs(i, { from: e.target.value })} />
+              <span>t/m</span>
+              {a.to === undefined ? (
+                <span className="muted" style={{ flex: 1, fontSize: 12, fontWeight: 600 }}>onbepaald</span>
+              ) : (
+                <input type="date" value={a.to} onChange={(e) => updateAbs(i, { to: e.target.value })} />
+              )}
+              <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, fontWeight: 600 }}>
+                <input
+                  type="checkbox"
+                  checked={a.to === undefined}
+                  onChange={(e) => updateAbs(i, { to: e.target.checked ? undefined : a.from })}
+                  style={{ width: "auto" }}
+                />
+                onbep.
+              </label>
+              <button className="iconbtn danger" onClick={() => removeAbs(i)} aria-label="verwijder" style={{ width: 30, height: 30 }}>🗑</button>
+            </div>
+          ))}
+          <button
+            className="linkbtn"
+            style={{ marginLeft: 0 }}
+            onClick={() => patch({ absences: [...(draft.absences ?? []), { from: todayStr() }] })}
+          >
+            ＋ periode toevoegen
+          </button>
+          <div className="hint">Tijdens een afwezigheidsperiode tel je niet mee in de planning.</div>
+        </div>
 
         <div className="field">
           <label>Voorbeeld — komende 14 dagen</label>

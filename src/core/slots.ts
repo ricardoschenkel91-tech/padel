@@ -34,6 +34,9 @@ export interface PlayableSlot {
 }
 
 const STEP = 0.25; // 15-minuten resolutie
+// Banen open 08:00–22:00; na 22:00 wordt er nooit gespeeld (spec-aanpassing).
+const COURT_OPEN = 8;
+const COURT_CLOSE = 22;
 
 /** Aanbevolen speelduur volgens spec §7. */
 export function recommendedDuration(playerCount: number, windowHours: number): number {
@@ -52,7 +55,7 @@ function blockWindow(block: SlotFilters["block"]): Interval | null {
     case "middag":
       return { start: 12, end: 18 };
     case "avond":
-      return { start: 18, end: 23 };
+      return { start: 18, end: 22 };
     default:
       return null;
   }
@@ -84,9 +87,9 @@ export function playableSlotsForDate(
     avail[p.id] = resolveAvailability(p, date, manual);
   }
 
-  // Zoekvenster: padel-uren ∩ eventueel tijdblok-filter.
-  let lo = settings.padelStart;
-  let hi = settings.padelEnd;
+  // Zoekvenster: baan-open-uren ∩ eventueel tijdblok-filter.
+  let lo = COURT_OPEN;
+  let hi = COURT_CLOSE;
   const bw = blockWindow(filters.block);
   if (bw) {
     lo = Math.max(lo, bw.start);

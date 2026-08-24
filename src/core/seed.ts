@@ -92,8 +92,8 @@ export function seedSettings(): GroupSettings {
     timezone: "Europe/Amsterdam",
     minPlayers: 4,
     defaultDurationMin: 120,
-    padelStart: 9,
-    padelEnd: 23,
+    padelStart: 8,
+    padelEnd: 22,
     lastBookingStart: 22,
     durationsMin: [60, 90, 120, 150, 180],
   };

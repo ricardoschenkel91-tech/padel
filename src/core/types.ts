@@ -51,8 +51,15 @@ export type AvailabilityStatus =
   | "MISSCHIEN"
   | "NA_BEVESTIGING";
 
-/** Rol binnen een groep (zacht, want geen login). */
+/** Rol binnen een groep. */
 export type Role = "BEHEERDER" | "SPELER" | "RESERVE";
+
+/** Afwezigheidsperiode: uit de planning van `from` t/m `to` (of onbepaald). */
+export interface Absence {
+  from: DateStr;
+  to?: DateStr; // leeg = onbepaald
+  note?: string;
+}
 
 export interface Player {
   id: string;
@@ -72,6 +79,8 @@ export interface Player {
   notes?: string;
   /** SHA-256 hash van de persoonlijke pincode (nooit de pincode zelf opslaan). */
   pinHash?: string;
+  /** Afwezigheidsperioden (vakantie/afwezig): speler telt dan niet mee. */
+  absences?: Absence[];
   createdAt: number;
 }
 

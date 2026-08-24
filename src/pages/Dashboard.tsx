@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useGroup } from "../store/GroupProvider";
-import { addDays, playableSlotsForDate, todayStr, type Location, type PlayableSlot } from "../core";
+import { addDays, isoWeek, playableSlotsForDate, todayStr, type Location, type PlayableSlot } from "../core";
 import { DOW, fmtDuration, fmtWindow, initials, niceDate, PERIOD_OPTIONS } from "../lib/ui";
 
 function level(n: number): "green" | "yellow" | "orange" {
@@ -107,6 +107,7 @@ function DayCard({
       <div className="dc-head">
         <span className="dc-dow">{DOW[new Date(date + "T00:00:00Z").getUTCDay()]}</span>
         <span className="dc-date mono">{niceDate(date)}</span>
+        <span className="dc-wk mono">wk {isoWeek(date)}</span>
         {isToday && <span className="badge today">Vandaag</span>}
       </div>
 

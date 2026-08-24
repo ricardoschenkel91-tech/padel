@@ -205,7 +205,14 @@ export function resolveAvailability(
         };
     }
   }
+  // Afwezigheid (vakantie): onder handmatige invoer, boven het rooster (spec §61).
+  if (isAbsent(player, date)) return blank(player, date, "Afwezig (vakantie/afwezigheid)");
   return auto;
+}
+
+/** Valt een datum binnen een afwezigheidsperiode van de speler? */
+export function isAbsent(player: Player, date: DateStr): boolean {
+  return (player.absences ?? []).some((a) => date >= a.from && (!a.to || date <= a.to));
 }
 
 function blank(player: Player, date: DateStr, reason: string): DayAvailability {
