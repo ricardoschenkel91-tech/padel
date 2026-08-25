@@ -370,6 +370,7 @@ table.roster td.today{background:color-mix(in srgb,var(--red) 7%,transparent)}
 .ctrls{align-items:stretch}
 .ctrls .seg{flex:1 1 100%}
 .ctrls .seg button{flex:1}
-.ctrls .chip{flex:1 1 140px;min-width:0;justify-content:space-between}
+.ctrls .chip{flex:1 1 140px;min-width:0;justify-content:flex-start}
+.ctrls .chip select{width:auto;flex:0 0 auto}
 .ctrls .chip select{min-width:0}
 .chip label{white-space:nowrap}
