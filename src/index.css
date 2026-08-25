@@ -321,7 +321,7 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 @keyframes fall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(240px) rotate(180deg);opacity:0}}
 
 /* klikbaar logo + naam-menu */
-.brandbtn{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;cursor:pointer}
+.brandbtn{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;cursor:pointer;color:var(--ink)}
 .menubtn{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-weight:700;font-size:13px;color:var(--ink);box-shadow:var(--shadow)}
 .profile .caret{color:var(--ink-3);font-size:10px;margin-left:2px}
 .hdr-right{position:relative}
