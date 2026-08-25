@@ -16,6 +16,42 @@ export function App() {
   const { state, sync, code, setCode, currentPlayer, logout, revealPins, setRevealPins } = useGroup();
   const [tab, setTab] = useState<Tab>("kansen");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [installEvt, setInstallEvt] = useState<{ prompt: () => void; userChoice: Promise<unknown> } | null>(null);
+
+  // Vang de 'installeer'-prompt op (Android/Chrome) voor de menuknop.
+  useEffect(() => {
+    const onBIP = (e: Event) => {
+      e.preventDefault();
+      setInstallEvt(e as unknown as { prompt: () => void; userChoice: Promise<unknown> });
+    };
+    const onInstalled = () => setInstallEvt(null);
+    window.addEventListener("beforeinstallprompt", onBIP);
+    window.addEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBIP);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
+  }, []);
+
+  const isStandalone =
+    window.matchMedia?.("(display-mode: standalone)").matches ||
+    (navigator as unknown as { standalone?: boolean }).standalone === true;
+
+  const installApp = async () => {
+    setMenuOpen(false);
+    if (installEvt) {
+      installEvt.prompt();
+      await installEvt.userChoice;
+      setInstallEvt(null);
+      return;
+    }
+    const iOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    alert(
+      iOS
+        ? "PadelMatch op je beginscherm zetten:\n\n1. Tik onderin op het deel-icoon (vierkantje met pijl omhoog).\n2. Kies 'Zet op beginscherm'.\n3. Tik op 'Voeg toe'."
+        : "App installeren:\n\n1. Open het browsermenu (⋮ rechtsboven).\n2. Kies 'App installeren' of 'Toevoegen aan startscherm'.",
+    );
+  };
 
   // Groepscode uit de deel-link (#g=code) overnemen bij openen.
   useEffect(() => {
@@ -76,6 +112,9 @@ export function App() {
                   <button role="menuitem" onClick={() => { setTab("spelers"); setMenuOpen(false); }}>
                     👥 Spelers <span className="mn">{playerCount}</span>
                   </button>
+                  {!isStandalone && (
+                    <button role="menuitem" onClick={installApp}>📲 App installeren</button>
+                  )}
                   {currentPlayer && (
                     <>
                       <div className="menu-sep" />
