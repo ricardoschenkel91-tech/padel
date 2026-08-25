@@ -96,16 +96,24 @@ export function Players() {
 
   const canEdit = (p: Player) => isAdmin || p.id === currentPlayer?.id;
 
-  const onSave = async (p: Player) => {
+  const onSave = async (p: Player, manualPin?: string) => {
     const existing = state.players[p.id];
     if (existing?.role === "BEHEERDER" && p.role !== "BEHEERDER" && otherBeheerders(p.id) < 1) {
       alert("Er moet altijd minstens één beheerder blijven.");
       return;
     }
+    if (manualPin && !/^\d{4}$/.test(manualPin)) {
+      alert("Een pincode bestaat uit 4 cijfers.");
+      return;
+    }
     const isNew = !existing;
     upsertPlayer(p);
     setOpen(false);
-    if (isNew && protectedOn) {
+    if (manualPin) {
+      const ok = await g.setPin(p.id, manualPin);
+      if (!ok) alert("Die pincode is al in gebruik — kies via bewerken een andere.");
+      else setRevealPins([{ id: p.id, name: p.fullName, pin: manualPin }]);
+    } else if (isNew && protectedOn) {
       const pin = await g.assignPin(p.id);
       setRevealPins([{ id: p.id, name: p.fullName, pin }]);
     }
@@ -287,8 +295,9 @@ function PlayerForm({
   usedColors: string[];
   lockReserve: boolean;
   onClose: () => void;
-  onSave: (p: Player) => void;
+  onSave: (p: Player, manualPin?: string) => void;
 }) {
+  const [pinInput, setPinInput] = useState("");
   const [draft, setDraft] = useState<Player>(
     existing ?? {
       id: "p" + Date.now().toString(36),
@@ -342,7 +351,7 @@ function PlayerForm({
   const save = () => {
     const fullName = draft.fullName.trim();
     if (!fullName) return;
-    onSave({ ...draft, fullName, displayName: draft.displayName.trim() || fullName.split(" ")[0] });
+    onSave({ ...draft, fullName, displayName: draft.displayName.trim() || fullName.split(" ")[0] }, pinInput.trim() || undefined);
   };
 
   return (
@@ -461,6 +470,20 @@ function PlayerForm({
               onChange={(e) => patch({ role: e.target.checked ? "BEHEERDER" : "SPELER" })}
             />
             <label htmlFor="beheerder">Beheerder (mag alles beheren)</label>
+          </div>
+        )}
+        {gg.isAdmin && (
+          <div className="field">
+            <label>Pincode</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, "").slice(0, 4))}
+              placeholder={existing?.pinHash ? "•••• (leeg = ongewijzigd)" : "leeg = automatisch"}
+            />
+            <div className="hint">Laat leeg voor een automatische pincode, of vul 4 cijfers in om zelf te kiezen.</div>
           </div>
         )}
 

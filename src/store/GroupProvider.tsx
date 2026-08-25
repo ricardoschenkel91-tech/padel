@@ -55,6 +55,7 @@ interface GroupContextValue {
   logout: () => void;
   assignPin: (playerId: string) => Promise<string>;
   resetPin: (playerId: string) => Promise<string>;
+  setPin: (playerId: string, pin: string) => Promise<boolean>;
   enablePinProtection: () => Promise<PinAssignment[]>;
   revealPins: PinAssignment[] | null;
   setRevealPins: (p: PinAssignment[] | null) => void;
@@ -212,6 +213,13 @@ export function GroupProvider({ children }: { children: ReactNode }) {
         const { pin, hash } = await freshPin(taken);
         update((s) => ({ ...s, players: { ...s.players, [playerId]: { ...s.players[playerId], pinHash: hash } } }));
         return pin;
+      },
+      setPin: async (playerId, pin) => {
+        const hash = await hashPin(pin, code);
+        const clash = Object.values(state.players).some((p) => p.id !== playerId && p.pinHash === hash);
+        if (clash) return false;
+        update((s) => ({ ...s, players: { ...s.players, [playerId]: { ...s.players[playerId], pinHash: hash } } }));
+        return true;
       },
       enablePinProtection: async () => {
         const players = { ...state.players };

@@ -9,19 +9,23 @@ export function PinLock() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const press = (d: string) => {
-    setError("");
-    setPin((p) => (p + d).slice(0, 6));
-  };
-  const submit = async () => {
-    if (pin.length < 4 || busy) return;
+  const tryLogin = async (code4: string) => {
+    if (busy) return;
     setBusy(true);
-    const ok = await login(pin);
+    const ok = await login(code4);
     setBusy(false);
     if (!ok) {
       setError("Onbekende pincode");
       setPin("");
     }
+  };
+  const press = (d: string) => {
+    setError("");
+    setPin((p) => {
+      const np = (p + d).slice(0, 4);
+      if (np.length === 4) void tryLogin(np); // automatisch inloggen bij 4 cijfers
+      return np;
+    });
   };
 
   return (
@@ -32,8 +36,8 @@ export function PinLock() {
         <p className="muted">Groep “{state.settings.name}” · voer je pincode in</p>
 
         <div className="pindots">
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <span key={i} className={"pindot" + (i < pin.length ? " on" : "") + (i >= 4 ? " opt" : "")} />
+          {[0, 1, 2, 3].map((i) => (
+            <span key={i} className={"pindot" + (i < pin.length ? " on" : "")} />
           ))}
         </div>
         {error && <div className="lock-err">{error}</div>}
@@ -42,9 +46,9 @@ export function PinLock() {
           {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
             <button key={d} onClick={() => press(d)}>{d}</button>
           ))}
-          <button className="k-ghost" onClick={() => setPin((p) => p.slice(0, -1))} aria-label="wis">⌫</button>
+          <span className="k-spacer" aria-hidden />
           <button onClick={() => press("0")}>0</button>
-          <button className="k-ok" onClick={submit} disabled={pin.length < 4 || busy} aria-label="ok">→</button>
+          <button className="k-ghost" onClick={() => { setError(""); setPin((p) => p.slice(0, -1)); }} aria-label="wis">⌫</button>
         </div>
 
         <button className="linkbtn" style={{ margin: "18px auto 0", display: "block" }} onClick={() => {
