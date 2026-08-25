@@ -338,12 +338,12 @@ table.roster tbody tr{border-top:1px solid var(--line)}
   min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
 .menu-sep{height:1px;background:var(--line);margin:4px 2px}
 
-/* rooster: vandaag rood gemarkeerd */
-table.roster th.today,table.roster td.today{box-shadow:inset 2px 0 var(--red),inset -2px 0 var(--red)}
-table.roster th.today{background:color-mix(in srgb,var(--red) 12%,var(--surface-2))}
-table.roster td.today{background:color-mix(in srgb,var(--red) 6%,transparent)}
-.daynum.ring{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;
-  border-radius:50%;background:var(--red);color:#fff;padding:0 3px;margin-top:1px}
+/* rooster: vandaag rood gemarkeerd — strak (ring + tint + onderlijn) */
+table.roster th.today{background:color-mix(in srgb,var(--red) 14%,var(--surface-2));
+  border-bottom:2px solid var(--red);color:var(--red)}
+table.roster td.today{background:color-mix(in srgb,var(--red) 7%,transparent)}
+.daynum.ring{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;
+  border-radius:50%;background:var(--red);color:#fff;padding:0 3px;margin-top:2px}
 
 /* eigen tijd bij 'Ik kan' */
 .eigentijd{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;font-weight:600;color:var(--ink-2);flex-wrap:wrap}
