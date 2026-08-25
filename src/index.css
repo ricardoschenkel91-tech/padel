@@ -319,3 +319,49 @@ table.roster tbody tr{border-top:1px solid var(--line)}
 .snow .f1{left:52%;animation-duration:9s;animation-delay:1.4s}
 .snow .f2{left:82%;animation-duration:8s;animation-delay:2.6s}
 @keyframes fall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(240px) rotate(180deg);opacity:0}}
+
+/* klikbaar logo + naam-menu */
+.brandbtn{display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;cursor:pointer}
+.menubtn{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:7px 12px;font-weight:700;font-size:13px;color:var(--ink);box-shadow:var(--shadow)}
+.profile .caret{color:var(--ink-3);font-size:10px;margin-left:2px}
+.hdr-right{position:relative}
+.menu-scrim{position:fixed;inset:0;z-index:40}
+.menu{position:absolute;right:0;top:calc(100% + 6px);z-index:41;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;box-shadow:var(--shadow);padding:6px;min-width:186px;display:flex;flex-direction:column;gap:2px}
+.menu-status{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:var(--ink-3);padding:6px 10px}
+.menu-status .dot{width:7px;height:7px;border-radius:50%;background:var(--yellow)}
+.menu-status .dot.on{background:var(--green)}
+.menu button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--ink);font-weight:650;
+  font-size:14px;padding:10px;border-radius:9px;text-align:left}
+.menu button:hover{background:var(--surface-2)}
+.menu .mn{margin-left:auto;font-size:11px;font-weight:800;background:var(--line);color:var(--ink-2);
+  min-width:18px;height:18px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;padding:0 5px}
+.menu-sep{height:1px;background:var(--line);margin:4px 2px}
+
+/* rooster: vandaag rood gemarkeerd */
+table.roster th.today,table.roster td.today{box-shadow:inset 2px 0 var(--red),inset -2px 0 var(--red)}
+table.roster th.today{background:color-mix(in srgb,var(--red) 12%,var(--surface-2))}
+table.roster td.today{background:color-mix(in srgb,var(--red) 6%,transparent)}
+.daynum.ring{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;
+  border-radius:50%;background:var(--red);color:#fff;padding:0 3px;margin-top:1px}
+
+/* eigen tijd bij 'Ik kan' */
+.eigentijd{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;font-weight:600;color:var(--ink-2);flex-wrap:wrap}
+.eigentijd input[type=time]{width:auto;padding:6px 8px}
+.eigentijd>span:first-child{color:var(--ink-3);font-size:11px;text-transform:uppercase;letter-spacing:.04em;font-weight:750}
+
+/* gereserveerde slot: binnenste tegel paars */
+.slot.reserved{background:color-mix(in srgb,var(--purple) 14%,var(--surface));
+  border-color:color-mix(in srgb,var(--purple) 42%,var(--line))}
+.cnt.purple{color:var(--purple)}
+
+/* festdag-overlay: bewegende elementen over de hele tegel */
+.festive-ov{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.festive-ov .fx{position:absolute;opacity:.5;will-change:transform;
+  animation-iteration-count:infinite;animation-timing-function:linear}
+.festive-ov.fall .fx{top:-18px;animation-name:fx-fall}
+.festive-ov.rise .fx{bottom:-18px;animation-name:fx-rise}
+.festive-ov.drift .fx{animation-name:fx-drift}
+@keyframes fx-fall{0%{transform:translateY(-14px) rotate(0)}100%{transform:translateY(240px) rotate(220deg)}}
+@keyframes fx-rise{0%{transform:translateY(14px) scale(.85);opacity:0}12%{opacity:.6}100%{transform:translateY(-240px) scale(1.15);opacity:0}}
+@keyframes fx-drift{0%{transform:translateX(-20px) translateY(0)}50%{transform:translateX(330px) translateY(-10px)}100%{transform:translateX(680px) translateY(0)}}

@@ -62,6 +62,15 @@ describe("handmatige beschikbaarheid heeft voorrang (spec §8)", () => {
     expect(r.source).toBe("handmatig");
   });
 
+  it("'Ik kan' zónder eigen tijd respecteert de roostertijden (geen 0–24)", () => {
+    // Ricardo 25-08 = ochtenddienst → alleen na dienst beschikbaar, niet 's ochtends.
+    const manual: AvailabilityEntry = {
+      id: "b0", playerId: ricardo.id, date: "2026-08-25", status: "BESCHIKBAAR",
+    };
+    const r = resolveAvailability(ricardo, "2026-08-25", manual);
+    expect(r.intervals).toEqual([{ start: 14, end: 24 }]);
+  });
+
   it("handmatig venster 19:15–22:00 overschrijft automatische beschikbaarheid", () => {
     const manual: AvailabilityEntry = {
       id: "m2", playerId: maurice.id, date: "2026-08-29", status: "BESCHIKBAAR",

@@ -11,9 +11,10 @@ export function Roster() {
     () => Object.values(state.players).filter((p) => p.active).sort((a, b) => a.createdAt - b.createdAt),
     [state.players],
   );
+  const today = todayStr();
   const dates = useMemo(
-    () => Array.from({ length: horizon }, (_, i) => addDays(todayStr(), i)),
-    [horizon],
+    () => Array.from({ length: horizon }, (_, i) => addDays(today, i)),
+    [horizon, today],
   );
 
   if (!players.length) return <div className="empty">Nog geen spelers.</div>;
@@ -39,11 +40,12 @@ export function Roster() {
               {dates.map((d) => {
                 const wd = new Date(d + "T00:00:00Z").getUTCDay();
                 const h = holidayFor(d);
+                const isToday = d === today;
                 return (
-                  <th key={d} className={wd === 0 || wd === 6 ? "wknd" : ""}>
+                  <th key={d} className={(wd === 0 || wd === 6 ? "wknd" : "") + (isToday ? " today" : "")}>
                     {DOW[wd]}
                     <br />
-                    <span className="mono" style={{ fontWeight: 800 }}>{+d.split("-")[2]}</span>
+                    <span className={"mono daynum" + (isToday ? " ring" : "")} style={{ fontWeight: 800 }}>{+d.split("-")[2]}</span>
                     {h && <span title={h.name} style={{ display: "block", fontSize: 11, lineHeight: 1 }}>{h.emoji}</span>}
                   </th>
                 );
@@ -65,7 +67,7 @@ export function Roster() {
                 {dates.map((d) => {
                   const sh = playerShift(p, d);
                   return (
-                    <td key={d}>
+                    <td key={d} className={d === today ? "today" : ""}>
                       <div className={"cell " + sh}>{sh === "V" ? "·" : sh[0]}</div>
                     </td>
                   );

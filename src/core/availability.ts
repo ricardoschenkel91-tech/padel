@@ -244,10 +244,17 @@ export function resolveAvailability(
       case "NIET_BESCHIKBAAR":
         return { ...base, intervals: [], reason: manual.note ?? "Handmatig: niet beschikbaar" };
       case "BESCHIKBAAR":
+        // 'Ik kan' zonder eigen tijd = bevestiging binnen je roostertijden
+        // (dus een ochtenddienst blijft 's ochtends bezet). Met eigen venster
+        // overschrijf je het rooster (bv. dienst geruild).
         return {
           ...base,
-          intervals: [manual.window ?? { start: 0, end: 24 }],
-          reason: manual.note ?? "Handmatig: beschikbaar",
+          intervals: manual.window ? [manual.window] : auto.intervals,
+          reason: manual.window
+            ? manual.note ?? "Beschikbaar — eigen tijd"
+            : auto.intervals.length
+              ? "Bevestigd — binnen je roostertijden"
+              : "Bevestigd, maar rooster geeft geen vrije tijd — kies 'eigen tijd'",
         };
       case "MISSCHIEN":
         return {

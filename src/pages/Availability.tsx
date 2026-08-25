@@ -7,7 +7,7 @@ import {
   type AvailabilityStatus,
   type ShiftCode,
 } from "../core";
-import { DOW, fmtWindow, niceDate, PERIOD_OPTIONS, SHIFT_LABEL } from "../lib/ui";
+import { DOW, fmtHour, fmtWindow, niceDate, PERIOD_OPTIONS, SHIFT_LABEL, timeToHour } from "../lib/ui";
 
 const OPTIONS: { status: AvailabilityStatus; label: string; cls: string }[] = [
   { status: "AUTO", label: "Idle", cls: "b-idle" },
@@ -38,6 +38,8 @@ export function AvailabilityPage() {
     if (status === "AUTO") clearAvailability(playerId, date);
     else setAvailability({ id: playerId + "|" + date, playerId, date, status });
   };
+  const setWindow = (date: string, win: { start: number; end: number }) =>
+    setAvailability({ id: playerId + "|" + date, playerId, date, status: "BESCHIKBAAR", window: win });
 
   return (
     <>
@@ -93,6 +95,24 @@ export function AvailabilityPage() {
                   </button>
                 ))}
               </div>
+              {current === "BESCHIKBAAR" &&
+                (manual?.window ? (
+                  <div className="eigentijd">
+                    <span>Eigen tijd:</span>
+                    <input type="time" value={fmtHour(manual.window.start)} onChange={(e) => setWindow(date, { start: timeToHour(e.target.value), end: manual.window!.end })} />
+                    <span>–</span>
+                    <input type="time" value={fmtHour(manual.window.end)} onChange={(e) => setWindow(date, { start: manual.window!.start, end: timeToHour(e.target.value) })} />
+                    <button className="linkbtn" style={{ marginLeft: 0 }} onClick={() => setStatus(date, "BESCHIKBAAR")}>↺ roostertijd</button>
+                  </div>
+                ) : (
+                  <button
+                    className="linkbtn"
+                    style={{ marginLeft: 0, marginTop: 8, display: "inline-block" }}
+                    onClick={() => { const base = res.intervals[0] ?? { start: 18, end: 22 }; setWindow(date, { start: base.start, end: base.end }); }}
+                  >
+                    ⏱ eigen tijd instellen (bv. dienst geruild)
+                  </button>
+                ))}
               <div className="reason">
                 {current === "AUTO" && (
                   <b style={{ color: "var(--ink-3)" }}>Idle — nog te bevestigen · </b>

@@ -39,7 +39,7 @@ export function Dashboard() {
         playerId: filterMe,
       });
       return { date, slots, isToday: i === 0 };
-    }).filter((d) => d.slots.length > 0);
+    }).filter((d) => d.slots.length > 0 || Object.values(state.bookings).some((b) => b.date === d.date));
   }, [state, horizon, min, filterMe]);
 
   if (players.length < 4) {
@@ -116,13 +116,7 @@ function DayCard({
 
   return (
     <div className={"daycard lv-" + lv + (booking ? " confirmed" : "") + (holiday ? " festive" : "")}>
-      {holiday?.emoji === "🎄" && (
-        <div className="snow" aria-hidden>
-          <span className="flake f0">❄️</span>
-          <span className="flake f1">❄️</span>
-          <span className="flake f2">❄️</span>
-        </div>
-      )}
+      {holiday && <FestiveOverlay name={holiday.name} emoji={holiday.emoji} />}
       <div className="dc-head">
         <span className="dc-dow">{DOW[new Date(date + "T00:00:00Z").getUTCDay()]}</span>
         <span className="dc-date mono">{niceDate(date)}</span>
@@ -137,7 +131,19 @@ function DayCard({
       </div>
 
       <div className="slots">
-        {slots.map((s, i) => {
+        {slots.length === 0 && booking ? (
+          <div className="slot reserved">
+            <div>
+              <div className="time mono">{fmtWindow({ start: booking.start, end: booking.end })}</div>
+              <div className="sub">
+                {state.locations[booking.locationId]?.name ?? "gereserveerd"}
+                {booking.court ? ` · baan ${booking.court}` : ""}
+              </div>
+            </div>
+            <span className="cnt purple">geboekt</span>
+          </div>
+        ) : (
+          slots.map((s, i) => {
           const who = s.availablePlayers.map((id) => players[id]).filter(Boolean);
           const lvl = level(who.length);
           // Combinatie-waarschuwing alleen tonen aan de betrokken speler zelf.
@@ -150,7 +156,7 @@ function DayCard({
           return (
             <div key={i}>
               <div
-                className={"slot " + lvl + (canPlay ? " clickable" : "")}
+                className={"slot " + (booking ? "reserved" : lvl) + (canPlay ? " clickable" : "")}
                 role={canPlay ? "button" : undefined}
                 tabIndex={canPlay ? 0 : undefined}
                 aria-expanded={canPlay ? isOpen : undefined}
@@ -179,7 +185,7 @@ function DayCard({
                       );
                     })}
                   </div>
-                  <span className={"cnt " + lvl}>{canPlay ? "kan!" : who.length}</span>
+                  <span className={"cnt " + (booking ? "purple" : lvl)}>{booking ? "geboekt" : canPlay ? "kan!" : who.length}</span>
                   {canPlay && <span className="chev">{isOpen ? "▲" : "▼"}</span>}
                 </div>
               </div>
@@ -192,7 +198,8 @@ function DayCard({
               {canPlay && isOpen && <LocationsPanel locations={locations} date={date} slot={s} />}
             </div>
           );
-        })}
+          })
+        )}
       </div>
     </div>
   );
@@ -287,6 +294,56 @@ function LocationsPanel({ locations, date, slot }: { locations: Location[]; date
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+type Motion = "fall" | "rise" | "drift";
+const FESTIVE: Record<string, { emojis: string[]; motion: Motion; count: number }> = {
+  "Nieuwjaarsdag": { emojis: ["🎉", "🎊", "✨", "🥂"], motion: "rise", count: 10 },
+  "Valentijnsdag": { emojis: ["💗", "💘", "💖", "❤️"], motion: "rise", count: 9 },
+  "Koningsdag": { emojis: ["👑", "🧡", "🎉", "🦁"], motion: "drift", count: 9 },
+  "Bevrijdingsdag": { emojis: ["🇳🇱", "🎈", "🧡", "🕊️"], motion: "drift", count: 8 },
+  "Goede Vrijdag": { emojis: ["✝️", "🕯️"], motion: "drift", count: 4 },
+  "Eerste Paasdag": { emojis: ["🐣", "🥚", "🐰", "🌷"], motion: "drift", count: 9 },
+  "Tweede Paasdag": { emojis: ["🐣", "🥚", "🐰", "🌷"], motion: "drift", count: 9 },
+  "Hemelvaartsdag": { emojis: ["☁️", "🕊️", "✨"], motion: "drift", count: 7 },
+  "Eerste Pinksterdag": { emojis: ["🕊️", "☁️", "🔥"], motion: "drift", count: 7 },
+  "Tweede Pinksterdag": { emojis: ["🕊️", "☁️", "🔥"], motion: "drift", count: 7 },
+  "Halloween": { emojis: ["🦇", "👻", "🎃", "🕸️", "🕷️"], motion: "drift", count: 10 },
+  "Sinterklaas": { emojis: ["🎁", "⭐", "🍪", "🎉"], motion: "fall", count: 9 },
+  "Eerste Kerstdag": { emojis: ["❄️", "❄️", "🎄", "⛄", "🎁"], motion: "fall", count: 11 },
+  "Tweede Kerstdag": { emojis: ["❄️", "❄️", "🎄", "⛄", "🎁"], motion: "fall", count: 11 },
+  "Oudjaarsdag": { emojis: ["🎆", "🎇", "✨", "🥂"], motion: "rise", count: 10 },
+};
+
+function FestiveOverlay({ name, emoji }: { name: string; emoji: string }) {
+  const cfg = FESTIVE[name] ?? { emojis: [emoji], motion: "drift" as Motion, count: 6 };
+  const items = useMemo(
+    () =>
+      Array.from({ length: cfg.count }, (_, i) => ({
+        em: cfg.emojis[i % cfg.emojis.length],
+        pos: Math.round((i * 97 + 13) % 100), // pseudo-willekeurige spreiding
+        dur: 5 + ((i * 7) % 6), // 5–10s
+        delay: -(((i * 13) % 60) / 10), // negatief = meteen verspreid in beeld
+        size: 13 + ((i * 5) % 12), // 13–24px
+      })),
+    [name], // eslint-disable-line react-hooks/exhaustive-deps
+  );
+  return (
+    <div className={"festive-ov " + cfg.motion} aria-hidden>
+      {items.map((it, i) => {
+        const s: Record<string, string> =
+          cfg.motion === "drift"
+            ? { top: it.pos + "%", left: "-12px" }
+            : { left: it.pos + "%" };
+        s.animationDuration = it.dur + "s";
+        s.animationDelay = it.delay + "s";
+        s.fontSize = it.size + "px";
+        return (
+          <span key={i} className="fx" style={s}>{it.em}</span>
+        );
+      })}
     </div>
   );
 }

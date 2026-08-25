@@ -13,8 +13,9 @@ import { todayStr } from "./core";
 type Tab = "kansen" | "gereserveerd" | "beschikbaar" | "rooster" | "spelers";
 
 export function App() {
-  const { state, sync, code, setCode, currentPlayer, isAdmin, logout, revealPins, setRevealPins } = useGroup();
+  const { state, sync, code, setCode, currentPlayer, logout, revealPins, setRevealPins } = useGroup();
   const [tab, setTab] = useState<Tab>("kansen");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Groepscode uit de deel-link (#g=code) overnemen bij openen.
   useEffect(() => {
@@ -42,32 +43,49 @@ export function App() {
     <div className="app">
       <header>
         <div className="brand">
-          <div className="logo" aria-hidden />
-          <div>
+          <button className="brandbtn" onClick={() => setTab("kansen")} aria-label="Naar Kansen">
+            <div className="logo" aria-hidden />
             <h1>PadelMatch</h1>
-          </div>
+          </button>
           <div className="hdr-right">
-            {isAdmin && (
-              <button className="gearbtn" onClick={() => setTab("spelers")} title="Beheer" aria-label="Beheer">⚙️</button>
-            )}
-            {currentPlayer ? (
-              <button
-                className="profile"
-                onClick={() => {
-                  if (confirm(`Uitloggen als ${currentPlayer.displayName}?`)) logout();
-                }}
-                title="Uitloggen"
-              >
-                <span className="av" style={{ background: currentPlayer.color }}>
-                  {initials(currentPlayer.displayName)}
-                </span>
-                <span className="pname">{currentPlayer.displayName}</span>
-              </button>
-            ) : (
-              <span className={"sync " + (sync === "cloud" ? "cloud" : "")}>
-                <span className="dot" />
-                {sync === "cloud" ? "Live sync" : "Lokaal"}
-              </span>
+            <button
+              className={currentPlayer ? "profile" : "menubtn"}
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-haspopup="menu"
+              aria-expanded={menuOpen}
+            >
+              {currentPlayer ? (
+                <>
+                  <span className="av" style={{ background: currentPlayer.color }}>{initials(currentPlayer.displayName)}</span>
+                  <span className="pname">{currentPlayer.displayName}</span>
+                  <span className="caret">▾</span>
+                </>
+              ) : (
+                <>☰ Menu</>
+              )}
+            </button>
+            {menuOpen && (
+              <>
+                <div className="menu-scrim" onClick={() => setMenuOpen(false)} />
+                <div className="menu" role="menu">
+                  <div className="menu-status">
+                    <span className={"dot " + (sync === "cloud" ? "on" : "")} />
+                    {sync === "cloud" ? "Live sync" : "Lokaal"}
+                  </div>
+                  <button role="menuitem" onClick={() => { setTab("rooster"); setMenuOpen(false); }}>📋 Rooster</button>
+                  <button role="menuitem" onClick={() => { setTab("spelers"); setMenuOpen(false); }}>
+                    👥 Spelers <span className="mn">{playerCount}</span>
+                  </button>
+                  {currentPlayer && (
+                    <>
+                      <div className="menu-sep" />
+                      <button role="menuitem" onClick={() => { setMenuOpen(false); if (confirm(`Uitloggen als ${currentPlayer.displayName}?`)) logout(); }}>
+                        ↩︎ Uitloggen
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>
@@ -80,12 +98,6 @@ export function App() {
           </button>
           <button role="tab" aria-selected={tab === "beschikbaar"} onClick={() => setTab("beschikbaar")}>
             🗓 Beschikbaar
-          </button>
-          <button role="tab" aria-selected={tab === "rooster"} onClick={() => setTab("rooster")}>
-            📋 Rooster
-          </button>
-          <button role="tab" aria-selected={tab === "spelers"} onClick={() => setTab("spelers")}>
-            👥 <span className="n">{playerCount}</span>
           </button>
         </div>
       </header>

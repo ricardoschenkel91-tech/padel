@@ -4,7 +4,7 @@
  * cycluspositie wordt met datumrekenen bepaald via een veilige positieve modulo.
  */
 
-import { positiveModulo, toDays } from "./dates";
+import { positiveModulo, toDays, weekday } from "./dates";
 import type { DateStr } from "./dates";
 import type {
   CycleSchedule,
@@ -132,6 +132,12 @@ export function playerShift(player: Player, date: DateStr): ShiftCode {
     if (!player.referenceDate) return "V";
     return shiftAt(sched, player.referenceDate, date);
   }
-  // Weekly: er is geen dienstcode; toon D op werkdagen (venster < hele dag), anders V.
+  // Weekly (dagdienst): toon D op werkdagen, V op vrije dagen.
+  if (player.scheduleType === "dagdienst") {
+    const wd = weekday(date);
+    const ww = player.workWeek;
+    if (ww) return ww[wd] ? "D" : "V";
+    return wd >= 1 && wd <= 5 ? "D" : "V";
+  }
   return "V";
 }
