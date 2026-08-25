@@ -5,7 +5,7 @@ import { DOW, initials, PERIOD_OPTIONS } from "../lib/ui";
 
 export function Roster() {
   const { state } = useGroup();
-  const [horizon, setHorizon] = useState(14);
+  const [horizon, setHorizon] = useState(183); // standaard 6 maanden
 
   const players = useMemo(
     () => Object.values(state.players).filter((p) => p.active).sort((a, b) => a.createdAt - b.createdAt),

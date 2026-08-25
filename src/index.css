@@ -365,3 +365,11 @@ table.roster td.today{background:color-mix(in srgb,var(--red) 7%,transparent)}
 @keyframes fx-fall{0%{transform:translateY(-14px) rotate(0)}100%{transform:translateY(240px) rotate(220deg)}}
 @keyframes fx-rise{0%{transform:translateY(14px) scale(.85);opacity:0}12%{opacity:.6}100%{transform:translateY(-240px) scale(1.15);opacity:0}}
 @keyframes fx-drift{0%{transform:translateX(-20px) translateY(0)}50%{transform:translateX(330px) translateY(-10px)}100%{transform:translateX(680px) translateY(0)}}
+
+/* filters netjes naast elkaar, passend op mobiel */
+.ctrls{align-items:stretch}
+.ctrls .seg{flex:1 1 100%}
+.ctrls .seg button{flex:1}
+.ctrls .chip{flex:1 1 140px;min-width:0;justify-content:space-between}
+.ctrls .chip select{min-width:0}
+.chip label{white-space:nowrap}

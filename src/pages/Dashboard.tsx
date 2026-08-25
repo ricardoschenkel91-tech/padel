@@ -19,7 +19,7 @@ function level(n: number): "green" | "yellow" | "orange" {
 export function Dashboard() {
   const { state, currentPlayer } = useGroup();
   const [min, setMin] = useState(state.settings.minPlayers);
-  const [horizon, setHorizon] = useState(14);
+  const [horizon, setHorizon] = useState(183); // standaard 6 maanden
   const [scope, setScope] = useState<"self" | "group">("self");
 
   const players = useMemo(
