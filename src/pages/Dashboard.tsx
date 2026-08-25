@@ -111,18 +111,23 @@ function DayCard({
   const booking = Object.values(state.bookings).find((b) => b.date === date);
   const holiday = holidayFor(date);
   const vacation = schoolVacationFor(date);
+  const festiveCfg: FestiveCfg | null = holiday
+    ? FESTIVE[holiday.name] ?? { emojis: [holiday.emoji], motion: "drift", count: 6 }
+    : vacation
+      ? VAC_FESTIVE[vacation.name] ?? { emojis: ["🏖️"], motion: "drift", count: 7 }
+      : null;
   const best = slots.reduce((mx, s) => Math.max(mx, s.availablePlayers.length), 0);
   const lv = best >= 4 ? "green" : best === 3 ? "yellow" : "orange";
 
   return (
-    <div className={"daycard lv-" + lv + (booking ? " confirmed" : "") + (holiday ? " festive" : "")}>
-      {holiday && <FestiveOverlay name={holiday.name} emoji={holiday.emoji} />}
+    <div className={"daycard lv-" + lv + (booking ? " confirmed" : "") + (festiveCfg ? " festive" : "")}>
+      {festiveCfg && <FestiveOverlay cfg={festiveCfg} />}
       <div className="dc-head">
         <span className="dc-dow">{DOW[new Date(date + "T00:00:00Z").getUTCDay()]}</span>
         <span className="dc-date mono">{niceDate(date)}</span>
         <span className="dc-wk mono">wk {isoWeek(date)}</span>
         {holiday && <span className="hol" title={holiday.name}>{holiday.emoji} {holiday.name}</span>}
-        {vacation && <span className="vac" title="Schoolvakantie Noord">🏖️ {vacation.name}</span>}
+        {vacation && <span className="vac" title="Schoolvakantie Noord">{VAC_FESTIVE[vacation.name]?.emojis[0] ?? "🏖️"} {vacation.name}</span>}
         {booking ? (
           <span className="badge conf">Gereserveerd</span>
         ) : isToday ? (
@@ -299,7 +304,8 @@ function LocationsPanel({ locations, date, slot }: { locations: Location[]; date
 }
 
 type Motion = "fall" | "rise" | "drift";
-const FESTIVE: Record<string, { emojis: string[]; motion: Motion; count: number }> = {
+type FestiveCfg = { emojis: string[]; motion: Motion; count: number };
+const FESTIVE: Record<string, FestiveCfg> = {
   "Nieuwjaarsdag": { emojis: ["🎉", "🎊", "✨", "🥂"], motion: "rise", count: 10 },
   "Valentijnsdag": { emojis: ["💗", "💘", "💖", "❤️"], motion: "rise", count: 9 },
   "Koningsdag": { emojis: ["👑", "🧡", "🎉", "🦁"], motion: "drift", count: 9 },
@@ -317,8 +323,16 @@ const FESTIVE: Record<string, { emojis: string[]; motion: Motion; count: number 
   "Oudjaarsdag": { emojis: ["🎆", "🎇", "✨", "🥂"], motion: "rise", count: 10 },
 };
 
-function FestiveOverlay({ name, emoji }: { name: string; emoji: string }) {
-  const cfg = FESTIVE[name] ?? { emojis: [emoji], motion: "drift" as Motion, count: 6 };
+// Schoolvakanties krijgen een eigen bijpassend bewegend thema over de hele tegel.
+const VAC_FESTIVE: Record<string, FestiveCfg> = {
+  "Kerstvakantie": { emojis: ["❄️", "🎄", "⛄", "🎁", "✨"], motion: "fall", count: 11 },
+  "Herfstvakantie": { emojis: ["🍂", "🍁", "🌰", "🍄"], motion: "fall", count: 10 },
+  "Voorjaarsvakantie": { emojis: ["🌷", "🌸", "🌱", "🐝"], motion: "drift", count: 9 },
+  "Meivakantie": { emojis: ["🌼", "🌷", "🐝", "☀️"], motion: "drift", count: 9 },
+  "Zomervakantie": { emojis: ["☀️", "🏖️", "🌴", "🍦", "🌊"], motion: "drift", count: 10 },
+};
+
+function FestiveOverlay({ cfg }: { cfg: FestiveCfg }) {
   const items = useMemo(
     () =>
       Array.from({ length: cfg.count }, (_, i) => ({
@@ -328,7 +342,7 @@ function FestiveOverlay({ name, emoji }: { name: string; emoji: string }) {
         delay: -(((i * 13) % 60) / 10), // negatief = meteen verspreid in beeld
         size: 13 + ((i * 5) % 12), // 13–24px
       })),
-    [name], // eslint-disable-line react-hooks/exhaustive-deps
+    [cfg], // eslint-disable-line react-hooks/exhaustive-deps
   );
   return (
     <div className={"festive-ov " + cfg.motion} aria-hidden>

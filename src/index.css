@@ -374,3 +374,4 @@ table.roster td.today{background:color-mix(in srgb,var(--red) 7%,transparent)}
 .ctrls .chip select{width:auto;flex:0 0 auto}
 .ctrls .chip select{min-width:0}
 .chip label{white-space:nowrap}
+.daycard.festive .vac{animation:twinkle 2.8s ease-in-out infinite}
