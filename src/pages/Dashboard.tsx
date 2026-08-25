@@ -61,7 +61,7 @@ export function Dashboard() {
           <button aria-pressed={scope === "group"} onClick={() => setScope("group")}>Hele groep</button>
         </div>
         <span className="chip">
-          <label>Min. spelers</label>
+          <label>Spelers</label>
           <span className="step">
             <button onClick={() => setMin((m) => Math.max(2, m - 1))} aria-label="minder">–</button>
             <b className="mono">{min}</b>
