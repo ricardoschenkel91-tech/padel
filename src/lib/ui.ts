@@ -2,11 +2,11 @@ import type { Interval, ShiftCode } from "../core";
 
 /** Keuzes voor de periode-selectie (aantal dagen vooruit), tot 6 maanden. */
 export const PERIOD_OPTIONS: { value: number; label: string }[] = [
-  { value: 7, label: "1 week" },
-  { value: 14, label: "2 weken" },
-  { value: 31, label: "1 maand" },
-  { value: 92, label: "3 maanden" },
-  { value: 183, label: "6 maanden" },
+  { value: 7, label: "1 wk" },
+  { value: 14, label: "2 wkn" },
+  { value: 31, label: "1 mnd" },
+  { value: 92, label: "3 mnd" },
+  { value: 183, label: "6 mnd" },
 ];
 
 export const DOW = ["zo", "ma", "di", "wo", "do", "vr", "za"];
